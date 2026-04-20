@@ -66,12 +66,22 @@ export const OfferManagement = () => {
                 </div>
 
                 <h3 className="text-xl font-black text-slate-900 mb-2 leading-tight">{offer.name}</h3>
-                
+{/*                 
                 <div className="flex items-baseline gap-2 mb-6">
                   <span className="text-3xl font-black text-brand-primary tracking-tighter">AED {offer.discount_amount}</span>
                   <span className="text-xs font-bold text-slate-400 uppercase tracking-tighter">OFF</span>
                 </div>
+                 */}
 
+
+                <div className="flex items-baseline gap-2 mb-6">
+                  <span className="text-3xl font-black text-brand-primary tracking-tighter">
+                    {offer.discount_type === 'PERCENTAGE' 
+                      ? `${offer.discount_amount}%` 
+                      : `AED ${offer.discount_amount}`}
+                  </span>
+                  <span className="text-xs font-bold text-slate-400 uppercase tracking-tighter">OFF</span>
+                </div>
                 <div className="mt-auto space-y-3 pt-6 border-t border-slate-50">
                   <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-widest">
                     <span className="text-slate-400 flex items-center gap-1.5"><Target size={12}/> Min Order</span>

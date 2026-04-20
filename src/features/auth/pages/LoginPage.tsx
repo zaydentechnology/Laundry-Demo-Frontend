@@ -81,7 +81,7 @@ export const LoginPage = () => {
             </span>
           </div>
 
-          <h2 className="text-3xl font-black text-slate-800 tracking-tighter">Welcome Back.</h2>
+          <h2 className="text-3xl font-black text-slate-800 tracking-tighter">Welcome</h2>
           <p className="mt-2 text-slate-500 font-medium text-sm">Fresh clothes are just a few taps away.</p>
         </div>
 

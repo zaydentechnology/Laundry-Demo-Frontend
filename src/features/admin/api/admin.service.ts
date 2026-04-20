@@ -24,6 +24,7 @@ export interface OfferResponse {
   id: number;
   name: string;
   min_order_amount: number;
+  discount_type: "FIXED" | "PERCENTAGE";
   discount_amount: number;
   start_date: string;
   end_date: string;
