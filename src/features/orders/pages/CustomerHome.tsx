@@ -54,7 +54,7 @@ export const CustomerHome = () => {
       
      <div 
         className="fixed inset-0 z-0 bg-cover bg-center opacity-50 brightness-75 pointer-events-none"
-        style={{ backgroundImage: "url('/images/bg5.jpg')" }}
+        style={{ backgroundImage: "url('/images/bg4.jpg')" }}
       />
       <div className="relative z-10 space-y-8 pb-24 md:pb-8 max-w-2xl mx-auto pt-4 px-4 md:px-0">
         

@@ -57,7 +57,7 @@ export const LoginPage = () => {
       {/* 1. BACKGROUND LAYER */}
       <div 
         className="fixed inset-0 z-0 bg-cover bg-center opacity-30 brightness-75 pointer-events-none"
-        style={{ backgroundImage: "url('/images/bg5.jpg')" }}
+        style={{ backgroundImage: "url('/images/bg4.jpg')" }}
       />
 
       {/* 2. CONTENT LAYER */}

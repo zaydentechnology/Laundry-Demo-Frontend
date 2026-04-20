@@ -71,7 +71,7 @@ export const OrderHistory = () => {
     <div className="relative min-h-screen">
       <div 
         className="fixed inset-0 z-0 bg-cover bg-center opacity-30 brightness-75 pointer-events-none"
-        style={{ backgroundImage: "url('/images/bg5.jpg')" }}
+        style={{ backgroundImage: "url('/images/bg4.jpg')" }}
       />
 
       <div className="relative z-10 space-y-8 max-w-2xl mx-auto pb-24 px-4 md:px-1 pt-4">

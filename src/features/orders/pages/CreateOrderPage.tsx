@@ -274,8 +274,8 @@ export const CreateOrderPage = () => {
 
   return (
     <div className="relative min-h-screen">
-      <div className="fixed inset-0 z-0 bg-cover bg-center opacity-40 brightness-75 pointer-events-none" style={{ backgroundImage: "url('/images/bg4.jpg')" }} />
-
+      {/* <div className="fixed inset-0 z-0 bg-cover bg-center opacity-40 brightness-75 pointer-events-none" style={{ backgroundImage: "url('/images/bg4.jpg')" }} /> */}
+  <div className="fixed inset-0 z-0 bg-blue-900/50 bg-blend-overlay bg-cover bg-center opacity-60 pointer-events-none" style={{ backgroundImage: "url('/images/bg4.jpg')" }} />
       <div className="relative z-10 max-w-2xl mx-auto space-y-8 pb-12 px-4 pt-4">
         <header className="bg-white/60 backdrop-blur-md p-6 rounded-3xl border border-white shadow-sm mt-2">
           <h1 className="text-3xl font-black text-slate-900 tracking-tighter">New Order</h1>
@@ -360,10 +360,10 @@ export const CreateOrderPage = () => {
         )}
 
         {/* Schedule Section */}
-        <section className="space-y-4">
-          <h3 className="text-[10px] font-black text-slate-600 uppercase tracking-[0.2em] flex items-center gap-2 bg-white/50 backdrop-blur-md w-max px-3 py-1.5 rounded-lg border border-white">
-            <Calendar size={14} /> When should we come?
-          </h3>
+   <section className="space-y-4 bg-blue-50/80 backdrop-blur-xl p-6 rounded-[2rem] border border-blue-100 shadow-sm">
+  <h3 className="text-[10px] font-black text-blue-800 uppercase tracking-[0.2em] flex items-center gap-2 bg-white/60 backdrop-blur-md w-max px-3 py-1.5 rounded-lg border border-blue-200/50">
+    <Calendar size={14} className="text-blue-600" /> When should we come?
+  </h3>
           <div className="relative space-y-3">
             <input 
               type="datetime-local" 

@@ -240,10 +240,10 @@ export const AboutUsPage = () => {
                       Mobile / WhatsApp
                     </p>
                     <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-slate-200">
-                      <p>054-3059449</p>
-                      <p>054-3077291</p>
-                      <p>055-3459500</p>
-                      <p>052-9251218</p>
+                      <p>0501535565</p>
+                      <p>0501552254</p>
+                      <p>0501554105</p>
+                      
                     </div>
                   </div>
                 </div>
