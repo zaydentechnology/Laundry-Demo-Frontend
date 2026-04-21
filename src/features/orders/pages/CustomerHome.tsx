@@ -85,7 +85,7 @@ export const CustomerHome = () => {
                   </p>
                   <div className="flex items-baseline gap-1">
                     <span className="text-4xl font-black tracking-tighter">
-                      {profile?.wallet_balance?.toFixed(2) || "0.00"}
+                     {Math.round(profile?.wallet_balance || 0)}
                     </span>
                     <span className="text-sm font-bold text-brand-primary">
                       pts
