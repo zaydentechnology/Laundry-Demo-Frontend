@@ -505,7 +505,7 @@ export const CreateOrderPage = () => {
           </button>
         </section>
 
-        <div className="bg-slate-900 rounded-[2.5rem] p-8 shadow-2xl shadow-slate-200 space-y-6 relative overflow-hidden">
+        {/* <div className="bg-slate-900 rounded-[2.5rem] p-8 shadow-2xl shadow-slate-200 space-y-6 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-32 h-32 bg-brand-primary/20 rounded-full blur-3xl pointer-events-none"></div>
 
           <div className="relative z-10 space-y-4">
@@ -517,7 +517,7 @@ export const CreateOrderPage = () => {
                     Savings Applied: {appliedOffer.name}
                   </span>
                 </div>
-                <span className="font-black text-xs">- AED {discount}</span>
+                <span className="font-black text-xs">- AED {discount.toFixed(2)}</span>
               </div>
             )}
 
@@ -596,11 +596,11 @@ export const CreateOrderPage = () => {
                   Grand Total
                 </span>
                 <div className="flex items-baseline gap-2">
-                  <span className="text-4xl font-black tracking-tighter text-brand-primary">
+                  <span className="text-3xl font-black tracking-tighter text-brand-primary">
                     AED {finalDisplayTotal.toFixed(2)}
                   </span>
                   {(discount > 0 || (useWallet && creditsToUse > 0)) && (
-                    <span className="text-xs font-bold text-white/30 line-through">
+                  <span className="text-lg font-black text-slate-400 line-through decoration-red-500 decoration-2">
                       AED {subtotal.toFixed(2)}
                     </span>
                   )}
@@ -617,6 +617,142 @@ export const CreateOrderPage = () => {
                 ) : (
                   <>
                     Checkout <ArrowRight size={18} />
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div> */}
+
+        <div className="bg-gradient-to-br from-slate-900 to-slate-950 rounded-[2.5rem] p-6 sm:p-8 shadow-2xl shadow-brand-primary/10 border border-slate-800 space-y-6 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-40 h-40 bg-brand-primary/20 rounded-full blur-[3rem] pointer-events-none"></div>
+          <div className="absolute bottom-0 left-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-[3rem] pointer-events-none"></div>
+
+          <div className="relative z-10 space-y-5">
+            {appliedOffer && (
+              <div className="flex items-center justify-between bg-gradient-to-r from-emerald-500/10 to-transparent text-emerald-400 px-5 py-4 rounded-2xl border border-emerald-500/20 shadow-inner">
+                <div className="flex items-center gap-3">
+                  <div className="p-1.5 bg-emerald-500/20 rounded-lg">
+                    <TicketPercent size={16} className="text-emerald-400" />
+                  </div>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-emerald-300">
+                    Savings Applied: {appliedOffer.name}
+                  </span>
+                </div>
+                <span className="font-black text-sm tracking-tight">- AED {discount.toFixed(2)}</span>
+              </div>
+            )}
+
+            {config?.referral_system_enabled && walletBalance > 0 && (
+              <div className="bg-white/[0.03] hover:bg-white/[0.05] border border-white/5 transition-colors p-5 rounded-2xl space-y-4">
+                <label className="flex items-center justify-between cursor-pointer group">
+                  <div className="flex items-center gap-4 text-white">
+                    <div className="p-2.5 bg-brand-primary/10 rounded-xl text-brand-primary group-hover:scale-110 group-hover:bg-brand-primary/20 transition-all">
+                      <Wallet size={18} />
+                    </div>
+                    <div>
+                      <p className="text-xs font-black uppercase tracking-widest text-slate-200">
+                        Apply Credits
+                      </p>
+                      <p className="text-[10px] text-slate-400 font-bold mt-0.5">
+                        Balance: <span className="text-brand-primary">{walletBalance.toFixed(2)} pts</span>
+                      </p>
+                    </div>
+                  </div>
+                  <div
+                    className={`w-12 h-7 rounded-full p-1 transition-all duration-300 ease-in-out ${useWallet ? "bg-brand-primary shadow-lg shadow-brand-primary/30" : "bg-slate-700"}`}
+                  >
+                    <div
+                      className={`bg-white w-5 h-5 rounded-full shadow-md transition-transform duration-300 ease-in-out ${useWallet ? "translate-x-5" : "translate-x-0"}`}
+                    ></div>
+                  </div>
+                  <input
+                    type="checkbox"
+                    className="hidden"
+                    checked={useWallet}
+                    onChange={(e) => {
+                      setUseWallet(e.target.checked);
+                      if (e.target.checked && creditsToUse === 0)
+                        setCreditsToUse(maxUsableCredits);
+                    }}
+                  />
+                </label>
+                
+                {/* Smooth reveal for input */}
+                <div className={`grid transition-all duration-300 ease-in-out ${useWallet ? "grid-rows-[1fr] opacity-100 pt-2 border-t border-white/5" : "grid-rows-[0fr] opacity-0"}`}>
+                  <div className="overflow-hidden flex gap-2">
+                    <input
+                      type="number"
+                      value={creditsToUse || ""}
+                      onChange={(e) =>
+                        handleCreditChange(Number(e.target.value))
+                      }
+                      max={maxUsableCredits}
+                      className="flex-1 bg-black/20 border border-white/10 text-white rounded-xl px-4 py-3 text-sm font-black outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary transition-all"
+                      placeholder="0"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setCreditsToUse(maxUsableCredits)}
+                      className="bg-white/10 hover:bg-white/20 text-white px-5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all active:scale-95"
+                    >
+                      Max
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="border-t border-white/5 pt-5 space-y-2.5">
+              <div className="flex justify-between items-center text-slate-500 text-[10px] font-black uppercase tracking-widest px-1">
+                <span>VAT Inclusive (5%)</span>
+                <span>AED {vatAmount.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between items-center text-slate-600 text-[9px] font-black uppercase tracking-[0.2em] px-1">
+                <span>TRN No: 100361207200003</span>
+                <Info size={10} className="opacity-50" />
+              </div>
+            </div>
+
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between pt-5 border-t border-white/10 gap-5">
+              <div className="text-white">
+                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                  Grand Total
+                </span>
+                <div className="flex items-baseline gap-4 mt-1">
+                  <span className="text-4xl sm:text-5xl font-black tracking-tighter text-white">
+                    <span className="text-brand-primary text-2xl sm:text-3xl pr-1">AED</span>
+                    {finalDisplayTotal.toFixed(2)}
+                  </span>
+                  
+                  {(discount > 0 || (useWallet && creditsToUse > 0)) && (
+                    <div className="relative inline-flex items-center justify-center px-2 py-0.5 group">
+                      {/* 1. Subtle green highlight box slightly skewed in the background */}
+                      <span className="absolute inset-0 bg-emerald-500/10 rounded-lg transform -skew-x-12 border border-emerald-500/20"></span>
+                      
+                      {/* 2. The Old Price */}
+                      <span className="relative text-2xl sm:text-3xl font-black text-slate-500 group-hover:text-slate-400 transition-colors">
+                        {subtotal.toFixed(2)}
+                      </span>
+                      
+                      {/* 3. The Custom Slash Effect - Looks like a glowing neon marker strike */}
+                      <span className="absolute top-1/2 left-[-10%] w-[120%] h-[3px] bg-emerald-400 -rotate-6 rounded-full shadow-[0_0_12px_rgba(52,211,153,0.6)] border-y border-slate-900 pointer-events-none transition-all group-hover:shadow-[0_0_16px_rgba(52,211,153,0.9)] group-hover:scale-105"></span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <button
+                onClick={handleSubmit}
+                disabled={subtotal === 0 || orderMutation.isPending}
+                className="w-full sm:w-auto bg-brand-primary text-white px-8 py-5 rounded-[2rem] font-black text-xs sm:text-sm uppercase tracking-widest shadow-xl shadow-brand-primary/20 hover:shadow-brand-primary/40 hover:-translate-y-1 active:scale-95 disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-none transition-all duration-300 flex items-center justify-center gap-3 group"
+              >
+                {orderMutation.isPending ? (
+                  <Loader2 className="animate-spin" size={20} />
+                ) : (
+                  <>
+                    Checkout 
+                    <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
                   </>
                 )}
               </button>

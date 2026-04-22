@@ -69,79 +69,90 @@ export const CustomerHome = () => {
           <PromoSlider />
         </div>
 
-         {/* NEW: Referral & Wallet Card */}
+{/* NEW: Referral & Wallet Card */}
         {config?.referral_system_enabled && (
-          <div className="bg-slate-900 p-8 rounded-[2.5rem] border border-slate-800 shadow-2xl shadow-slate-200/50 flex flex-col text-white overflow-hidden relative animate-in zoom-in-95 duration-500">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-brand-primary rounded-full blur-[80px] opacity-20 -mr-20 -mt-20 pointer-events-none"></div>
+          <div className="bg-gradient-to-b from-slate-900 to-slate-950 p-6 sm:p-8 rounded-[2.5rem] border border-slate-800 shadow-2xl shadow-brand-primary/10 flex flex-col text-white overflow-hidden relative animate-in zoom-in-95 duration-500">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-brand-primary rounded-full blur-[80px] opacity-10 -mr-20 -mt-20 pointer-events-none"></div>
 
             <div className="flex flex-col md:flex-row items-center justify-between gap-6 z-10">
-              <div className="flex items-center gap-6 w-full md:w-auto">
-                <div className="h-16 w-16 bg-white/10 rounded-3xl border border-white/10 flex items-center justify-center backdrop-blur-md shrink-0">
-                  <Wallet className="text-brand-primary" size={28} />
+              {/* Wallet Section - Scaled Down & Refined */}
+              <div className="flex items-center gap-4 w-full md:w-auto">
+                <div className="h-12 w-12 bg-white/5 rounded-2xl border border-white/10 flex items-center justify-center backdrop-blur-md shrink-0 shadow-inner">
+                  <Wallet className="text-brand-primary" size={22} />
                 </div>
                 <div>
                   <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
                     Available Credits
                   </p>
-                  <div className="flex items-baseline gap-1">
-                    <span className="text-4xl font-black tracking-tighter">
-                     {Math.round(profile?.wallet_balance || 0)}
+                  <div className="flex items-baseline gap-1.5 mt-0.5">
+                    <span className="text-2xl sm:text-3xl font-black tracking-tight text-white">
+                      {Math.round(profile?.wallet_balance || 0)}
                     </span>
-                    <span className="text-sm font-bold text-brand-primary">
+                    <span className="text-xs font-bold text-brand-primary uppercase tracking-widest">
                       pts
                     </span>
                   </div>
                 </div>
               </div>
 
+              {/* Referral Code Section - Scaled Down & Styled like a Coupon */}
               {profile?.referral_code && (
-                <div className="bg-white/5 border border-white/10 p-5 rounded-2xl w-full md:w-auto backdrop-blur-md">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">
-                    Your Referral Code
-                  </p>
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-                    <span className="text-2xl font-black tracking-widest font-mono text-white select-all">
+                <div className="bg-white/[0.03] border border-white/10 p-4 rounded-2xl w-full md:w-auto backdrop-blur-md flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 justify-between">
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">
+                      Your Referral Code
+                    </p>
+                    <span className="text-lg font-black tracking-widest font-mono text-emerald-400 select-all bg-emerald-400/10 px-3 py-1 rounded-lg border border-emerald-400/20 inline-block">
                       {profile.referral_code}
                     </span>
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          navigator.clipboard.writeText(profile.referral_code || "");
-                          toast.success("Code copied!");
-                        }}
-                        className="px-4 py-2 bg-white/10 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-white/20 transition-all shadow-lg active:scale-95"
-                      >
-                        Copy
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const message = `Hey! Make your laundry experience easier with Al Nejoum Al Arbaah Laundry. \n\nSign up at www.alnejoumalarbaahlaundry.com and use my referral code: ${profile.referral_code}`;
-                          const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
-                          window.open(whatsappUrl, '_blank');
-                        }}
-                        className="px-4 py-2 flex items-center gap-1.5 bg-[#25D366] text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-[#20b858] transition-all shadow-lg active:scale-95"
-                      >
-                        <Share2 size={12} /> Share
-                      </button>
-                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        navigator.clipboard.writeText(profile.referral_code || "");
+                        toast.success("Code copied!");
+                      }}
+                      className="px-4 py-2.5 bg-white/10 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-white/20 transition-all active:scale-95 flex-1 sm:flex-none text-center"
+                    >
+                      Copy
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const message = `Hey! Make your laundry experience easier with Al Nejoum Al Arbaah Laundry. \n\nSign up at www.alnejoumalarbaahlaundry.com and use my referral code: ${profile.referral_code}`;
+                        const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
+                        window.open(whatsappUrl, '_blank');
+                      }}
+                      className="px-4 py-2.5 flex items-center justify-center gap-1.5 bg-[#25D366] text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-[#20b858] transition-all shadow-lg shadow-[#25D366]/20 active:scale-95 flex-1 sm:flex-none"
+                    >
+                      <Share2 size={12} /> Share
+                    </button>
                   </div>
                 </div>
               )}
             </div>
 
-            {/* Benefit Tag */}
-            <div className="mt-6 bg-brand-primary/10 border border-brand-primary/20 p-4 rounded-2xl flex items-start gap-3 z-10">
-              <Gift className="text-brand-primary shrink-0 mt-0.5" size={18} />
-              <div className="space-y-1">
-                <p className="text-sm font-medium text-slate-300 leading-snug">
-                  Get <span className="font-black text-white">{config?.reward_credits_per_referral || 0} credits</span> when a friend signs up and completes their first order!
-                </p>
-                <p className="text-[10px] font-black uppercase tracking-widest text-brand-primary">
-                  1 Credit = {config?.credit_conversion_rate} AED
+            {/* Benefit & HIGHLIGHTED Conversion Rate Section */}
+            <div className="mt-6 flex flex-col lg:flex-row items-stretch lg:items-center gap-3 z-10">
+              
+              <div className="bg-brand-primary/10 border border-brand-primary/20 p-4 rounded-2xl flex items-center gap-3 flex-1">
+                <Gift className="text-brand-primary shrink-0" size={20} />
+                <p className="text-xs sm:text-sm font-medium text-slate-300 leading-snug">
+                  Get <span className="font-black text-white">{config?.reward_credits_per_referral || 0} credits</span> when a friend signs up and completes an order!
                 </p>
               </div>
+
+              {/* The "Golden Hook" - Massively Upgraded Conversion Rate Badge */}
+              <div className="bg-gradient-to-r from-amber-500 to-orange-500 p-[1px] rounded-2xl shrink-0 shadow-lg shadow-orange-500/20">
+                <div className="bg-slate-950 px-5 py-3.5 rounded-[15px] flex items-center justify-center gap-2.5 h-full">
+                  <Sparkles size={16} className="text-amber-400 animate-pulse" />
+                  <span className="text-slate-300 font-bold text-sm sm:text-base whitespace-nowrap">
+                    1 Credit = <span className="text-amber-400 font-black tracking-wide">{config?.credit_conversion_rate} AED</span>
+                  </span>
+                </div>
+              </div>
+
             </div>
           </div>
         )}

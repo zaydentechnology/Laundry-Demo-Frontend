@@ -67,14 +67,14 @@ export const PromoSlider = () => {
                   <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest mb-0.5">You Save</p>
                   
                   {/* UPDATED: Dynamic Percentage vs AED rendering */}
-                  <p className="text-2xl font-black text-white tracking-tighter flex items-baseline">
+                  <p className="text-4xl font-black text-white tracking-tighter flex items-baseline">
                     {offer.discount_type === 'PERCENTAGE' ? (
                       <>
-                        {offer.discount_amount}<span className="text-sm font-bold text-brand-primary ml-1">%</span>
+                        {offer.discount_amount}<span className="text-xl font-bold text-brand-primary ml-1">%</span>
                       </>
                     ) : (
                       <>
-                        <span className="text-sm font-bold text-brand-primary mr-1">AED</span>
+                        <span className="text-3xl font-bold text-brand-primary mr-1">AED</span>
                         {offer.discount_amount}
                       </>
                     )}
