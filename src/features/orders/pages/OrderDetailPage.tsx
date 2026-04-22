@@ -92,6 +92,15 @@ export const OrderDetailPage = () => {
   // const displayTotal = order.final_price > 0 ? order.final_price : order.estimated_price;
   const displayTotal = order.status === 'NEW_ORDER' ? order.estimated_price : (order.final_price > 0 ? order.final_price : order.estimated_price);
   const vatDisplayAmount = displayTotal * 0.05;
+
+  // NEW: Calculate the raw subtotal before any discounts or credits were applied.
+  const rawSubtotal = order?.items?.reduce((sum: number, item: any) => {
+    const qty = order.status === 'NEW_ORDER' ? (item.estimated_quantity || 0) : (item.final_quantity > 0 ? item.final_quantity : (item.estimated_quantity || 0));
+    const price = item.unit_price || 0;
+    return sum + (qty * price);
+  }, 0) || 0;
+  
+  const hasSavings = rawSubtotal > displayTotal;
   
   const hasExistingFeedback = Boolean(order.notes && order.notes.trim().length > 0);
 
@@ -303,7 +312,36 @@ export const OrderDetailPage = () => {
                </div>
             </div>
 
-            <div className="flex justify-between items-center relative z-10">
+
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between pt-5 border-t border-white/10 gap-5 relative z-10">
+              <div className="text-white">
+                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                  {order.status === 'NEW_ORDER' ? 'Estimated Total' : 'Final Amount'}
+                </span>
+                <div className="flex items-baseline gap-4 mt-1">
+                  <span className="text-4xl sm:text-5xl font-black tracking-tighter text-white">
+                    <span className="text-brand-primary text-2xl sm:text-3xl pr-1">AED</span>
+                    {displayTotal.toFixed(2)}
+                  </span>
+                  
+                  {hasSavings && (
+                    <div className="relative inline-flex items-center justify-center px-2 py-0.5 group">
+                      {/* Subtle green highlight box slightly skewed in the background */}
+                      <span className="absolute inset-0 bg-emerald-500/10 rounded-lg transform -skew-x-12 border border-emerald-500/20"></span>
+                      
+                      {/* The Old Price */}
+                      <span className="relative text-2xl sm:text-3xl font-black text-slate-500 group-hover:text-slate-400 transition-colors">
+                        {rawSubtotal.toFixed(2)}
+                      </span>
+                      
+                      {/* The Custom Slash Effect */}
+                      <span className="absolute top-1/2 left-[-10%] w-[120%] h-[3px] bg-emerald-400 -rotate-6 rounded-full shadow-[0_0_12px_rgba(52,211,153,0.6)] border-y border-slate-900 pointer-events-none transition-all group-hover:shadow-[0_0_16px_rgba(52,211,153,0.9)] group-hover:scale-105"></span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+            {/* <div className="flex justify-between items-center relative z-10">
               <div className="flex flex-col">
                 <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
                   {order.status === 'NEW_ORDER' ? 'Estimated Total' : 'Final Amount'}
@@ -315,7 +353,7 @@ export const OrderDetailPage = () => {
                   AED {displayTotal.toFixed(2)}
                 </span>
               </div>
-            </div>
+            </div> */}
           </div>
         </div>
 

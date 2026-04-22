@@ -180,9 +180,9 @@ export const OrderManagement = () => {
         )}
       </header>
 
-      <div className="hidden md:block bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left whitespace-nowrap">
+      <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
+  <div className="overflow-x-auto">
+    <table className="w-full text-left whitespace-nowrap">
             <thead className="bg-slate-50/50 border-b border-slate-100">
               <tr>
                 <th className="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Order Info</th>
