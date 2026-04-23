@@ -443,7 +443,53 @@ export const CreateOrderPage = () => {
         )}
 
         {/* Schedule Section */}
-        <section className="space-y-4 bg-blue-50/80 backdrop-blur-xl p-6 rounded-[2rem] border border-blue-100 shadow-sm">
+        {/* Schedule Section - Fixed Mobile Overflow */}
+        <section className="space-y-4 bg-blue-50/80 backdrop-blur-xl p-4 sm:p-6 rounded-[2rem] border border-blue-100 shadow-sm overflow-hidden">
+          {/* Header: Reduced tracking on mobile and added max-w-full to prevent overflow */}
+          <h3 className="text-[10px] font-black text-blue-800 uppercase tracking-[0.1em] sm:tracking-[0.2em] flex items-center gap-2 bg-white/60 backdrop-blur-md w-max max-w-full px-3 py-1.5 rounded-lg border border-blue-200/50">
+            <Calendar size={14} className="text-blue-600 shrink-0" /> 
+            <span className="truncate">When should we come?</span>
+          </h3>
+
+          <div className="relative space-y-3">
+            <input
+              type="datetime-local"
+              value={pickupDate}
+              min={minPickupTime}
+              onChange={(e) => setPickupDate(e.target.value)}
+           
+              className={cn(
+                "w-full p-4 sm:p-5 bg-white/90 backdrop-blur-xl border border-white rounded-[1.5rem] font-bold text-sm sm:text-base focus:ring-2 focus:ring-brand-primary outline-none transition-all shadow-sm",
+                pickupDate ? "text-slate-900" : "text-slate-500",
+              )}
+            />
+
+            {pickupInfo && (
+              <div
+                className={cn(
+                  "p-3 sm:p-4 rounded-2xl border flex items-start gap-3 transition-colors",
+                  pickupInfo.isWithinHours
+                    ? "bg-brand-primary/5 border-brand-primary/10 text-brand-primary"
+                    : "bg-amber-50 border-amber-200 text-amber-700",
+                )}
+              >
+                <Info className="shrink-0 mt-0.5" size={16} />
+                {/* min-w-0 and break-words ensures the text wraps instead of pushing the box wide */}
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-bold leading-relaxed break-words">
+                    {pickupInfo.displayMessage}
+                  </p>
+                  {!pickupInfo.isWithinHours && (
+                    <p className="text-[10px] font-black uppercase tracking-widest mt-1 opacity-70 leading-tight">
+                      Outside business hours (8:30 AM - 10:30 PM)
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        </section>
+        {/* <section className="space-y-4 bg-blue-50/80 backdrop-blur-xl p-6 rounded-[2rem] border border-blue-100 shadow-sm">
           <h3 className="text-[10px] font-black text-blue-800 uppercase tracking-[0.2em] flex items-center gap-2 bg-white/60 backdrop-blur-md w-max px-3 py-1.5 rounded-lg border border-blue-200/50">
             <Calendar size={14} className="text-blue-600" /> When should we
             come?
@@ -482,7 +528,7 @@ export const CreateOrderPage = () => {
               </div>
             )}
           </div>
-        </section>
+        </section> */}
 
         {/* HANGER PREFERENCE */}
         <section className="bg-white/90 backdrop-blur-xl rounded-[2rem] border border-white shadow-sm p-6 flex items-center justify-between">
@@ -504,125 +550,6 @@ export const CreateOrderPage = () => {
             />
           </button>
         </section>
-
-        {/* <div className="bg-slate-900 rounded-[2.5rem] p-8 shadow-2xl shadow-slate-200 space-y-6 relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-brand-primary/20 rounded-full blur-3xl pointer-events-none"></div>
-
-          <div className="relative z-10 space-y-4">
-            {appliedOffer && (
-              <div className="flex items-center justify-between bg-white/10 text-white px-4 py-3 rounded-xl border border-white/10 animate-pulse">
-                <div className="flex items-center gap-2">
-                  <TicketPercent size={14} className="text-brand-primary" />
-                  <span className="text-[10px] font-black uppercase tracking-widest">
-                    Savings Applied: {appliedOffer.name}
-                  </span>
-                </div>
-                <span className="font-black text-xs">- AED {discount.toFixed(2)}</span>
-              </div>
-            )}
-
-            {config?.referral_system_enabled && walletBalance > 0 && (
-              <div className="bg-white/5 border border-white/10 p-4 rounded-2xl space-y-3">
-                <label className="flex items-center justify-between cursor-pointer group">
-                  <div className="flex items-center gap-3 text-white">
-                    <div className="p-2 bg-brand-primary/20 rounded-lg text-brand-primary">
-                      <Wallet size={16} />
-                    </div>
-                    <div>
-                      <p className="text-xs font-black uppercase tracking-widest">
-                        Apply Credits
-                      </p>
-                      <p className="text-[10px] text-slate-400 font-bold">
-                        Balance: {walletBalance.toFixed(2)} pts
-                      </p>
-                    </div>
-                  </div>
-                  <div
-                    className={`w-10 h-6 rounded-full p-1 transition-colors ${useWallet ? "bg-brand-primary" : "bg-slate-700"}`}
-                  >
-                    <div
-                      className={`bg-white w-4 h-4 rounded-full shadow-md transition-transform ${useWallet ? "translate-x-4" : "translate-x-0"}`}
-                    ></div>
-                  </div>
-                  <input
-                    type="checkbox"
-                    className="hidden"
-                    checked={useWallet}
-                    onChange={(e) => {
-                      setUseWallet(e.target.checked);
-                      if (e.target.checked && creditsToUse === 0)
-                        setCreditsToUse(maxUsableCredits);
-                    }}
-                  />
-                </label>
-                {useWallet && (
-                  <div className="pt-2 border-t border-white/10 flex gap-2">
-                    <input
-                      type="number"
-                      value={creditsToUse || ""}
-                      onChange={(e) =>
-                        handleCreditChange(Number(e.target.value))
-                      }
-                      max={maxUsableCredits}
-                      className="flex-1 bg-white/10 border border-white/10 text-white rounded-xl px-4 py-2 font-black outline-none focus:border-brand-primary transition-colors"
-                      placeholder="0"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setCreditsToUse(maxUsableCredits)}
-                      className="bg-white/10 text-white px-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-colors"
-                    >
-                      Max
-                    </button>
-                  </div>
-                )}
-              </div>
-            )}
-
-            <div className="border-t border-white/10 pt-4 space-y-2">
-              <div className="flex justify-between items-center text-slate-400 text-[10px] font-black uppercase tracking-widest px-1">
-                <span>VAT Inclusive (5%)</span>
-                <span>AED {vatAmount.toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between items-center text-brand-primary text-[9px] font-black uppercase tracking-[0.2em] px-1">
-                <span>TRN No: 100361207200003</span>
-                <Info size={10} />
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between pt-2 border-t border-white/10">
-              <div className="text-white">
-                <span className="text-[10px] font-black uppercase tracking-widest opacity-50">
-                  Grand Total
-                </span>
-                <div className="flex items-baseline gap-2">
-                  <span className="text-3xl font-black tracking-tighter text-brand-primary">
-                    AED {finalDisplayTotal.toFixed(2)}
-                  </span>
-                  {(discount > 0 || (useWallet && creditsToUse > 0)) && (
-                  <span className="text-lg font-black text-slate-400 line-through decoration-red-500 decoration-2">
-                      AED {subtotal.toFixed(2)}
-                    </span>
-                  )}
-                </div>
-              </div>
-
-              <button
-                onClick={handleSubmit}
-                disabled={subtotal === 0 || orderMutation.isPending}
-                className="bg-brand-primary text-white px-8 py-5 rounded-[2rem] font-black text-xs uppercase tracking-widest shadow-xl flex items-center gap-3 active:scale-95 disabled:opacity-30 transition-all"
-              >
-                {orderMutation.isPending ? (
-                  <Loader2 className="animate-spin" size={18} />
-                ) : (
-                  <>
-                    Checkout <ArrowRight size={18} />
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-        </div> */}
 
         <div className="bg-gradient-to-br from-slate-900 to-slate-950 rounded-[2.5rem] p-6 sm:p-8 shadow-2xl shadow-brand-primary/10 border border-slate-800 space-y-6 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-40 h-40 bg-brand-primary/20 rounded-full blur-[3rem] pointer-events-none"></div>
