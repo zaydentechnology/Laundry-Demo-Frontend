@@ -70,7 +70,7 @@ export const CreateOrderPage = () => {
     const day = String(now.getDate()).padStart(2, "0");
     const hours = String(now.getHours()).padStart(2, "0");
     const minutes = String(now.getMinutes()).padStart(2, "0");
-    return `${year}-${month}-${day}T${hours}:${minutes}`;
+    return `${year}-${month}-${day}T${hours}:${minutes}:00`;
   }, []);
 
   const { data: items, isLoading: itemsLoading } = useQuery({
@@ -456,12 +456,23 @@ export const CreateOrderPage = () => {
               type="datetime-local"
               value={pickupDate}
               min={minPickupTime}
-              onChange={(e) => setPickupDate(e.target.value)}
-           
-              className={cn(
-                "w-full p-4 sm:p-5 bg-white/90 backdrop-blur-xl border border-white rounded-[1.5rem] font-bold text-sm sm:text-base focus:ring-2 focus:ring-brand-primary outline-none transition-all shadow-sm",
-                pickupDate ? "text-slate-900" : "text-slate-500",
-              )}
+            onChange={(e) => {
+    const selectedValue = e.target.value;
+    const now = new Date().getTime();
+    const selectedTime = new Date(selectedValue).getTime();
+
+    // If the user bypasses the UI and selects a past date (common on iOS)
+    if (selectedTime < now) {
+      toast.error("Past dates are not allowed. Snapping to earliest available time.");
+      setPickupDate(minPickupTime); // Force reset to the minimum allowed
+    } else {
+      setPickupDate(selectedValue);
+    }
+  }}
+  className={cn(
+    "w-full p-4 sm:p-5 bg-white/90 backdrop-blur-xl border border-white rounded-[1.5rem] font-bold text-sm sm:text-base focus:ring-2 focus:ring-brand-primary outline-none transition-all shadow-sm",
+    pickupDate ? "text-slate-900" : "text-slate-500",
+  )}
             />
 
             {pickupInfo && (
