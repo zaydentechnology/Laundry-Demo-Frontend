@@ -3,7 +3,7 @@ import { MessageCircle, ArrowLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export const ForgotPasswordPage = () => {
-  const adminPhone = "918123075313"; 
+  const adminPhone = "971502220792"; 
   const message = encodeURIComponent("I forgot my password. Please help me reset it.");
   const whatsappUrl = `https://wa.me/${adminPhone}?text=${message}`;
 
