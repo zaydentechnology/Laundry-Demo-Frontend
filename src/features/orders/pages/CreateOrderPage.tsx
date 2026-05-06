@@ -119,9 +119,50 @@ export const CreateOrderPage = () => {
   //     total: Math.max(0, sub - disc)
   //   };
   // }, [cart, items, offers]);
+  // const { subtotal, appliedOffer, discount, total } = useMemo(() => {
+  //   if (!items)
+  //     return { subtotal: 0, appliedOffer: null, discount: 0, total: 0 };
+
+  //   let sub = 0;
+  //   Object.entries(cart).forEach(([cartKey, qty]) => {
+  //     if (qty <= 0) return;
+  //     const [itemIdStr, catIdStr] = cartKey.split("_");
+  //     const item = items.find((i) => i.id === Number(itemIdStr));
+  //     if (!item || !item.services) return;
+
+  //     const service = item.services.find(
+  //       (s) => s.service_category_id === Number(catIdStr),
+  //     );
+  //     if (service) {
+  //       sub += service.price * qty;
+  //     }
+  //   });
+
+  //   // UPDATED: Dynamically calculate the highest discount value based on the type
+  //   const bestOffer = offers
+  //     ?.filter((o) => o.is_active && sub >= o.min_order_amount)
+  //     .map((o) => {
+  //       // Compute the actual AED value of the discount for comparison
+  //       const calculatedDiscount =
+  //         o.discount_type === "PERCENTAGE"
+  //           ? sub * (o.discount_amount / 100)
+  //           : o.discount_amount;
+  //       return { ...o, calculatedDiscount };
+  //     })
+  //     .sort((a, b) => b.calculatedDiscount - a.calculatedDiscount)[0];
+
+  //   const disc = bestOffer ? bestOffer.calculatedDiscount : 0;
+
+  //   return {
+  //     subtotal: sub,
+  //     appliedOffer: bestOffer || null,
+  //     discount: disc,
+  //     total: Math.max(0, sub - disc),
+  //   };
+  // }, [cart, items, offers]);
+
   const { subtotal, appliedOffer, discount, total } = useMemo(() => {
-    if (!items)
-      return { subtotal: 0, appliedOffer: null, discount: 0, total: 0 };
+    if (!items) return { subtotal: 0, appliedOffer: null, discount: 0, total: 0 };
 
     let sub = 0;
     Object.entries(cart).forEach(([cartKey, qty]) => {
@@ -130,22 +171,40 @@ export const CreateOrderPage = () => {
       const item = items.find((i) => i.id === Number(itemIdStr));
       if (!item || !item.services) return;
 
-      const service = item.services.find(
-        (s) => s.service_category_id === Number(catIdStr),
-      );
+      const service = item.services.find((s) => s.service_category_id === Number(catIdStr));
       if (service) {
-        sub += service.price * qty;
+        // APPLY ITEM DISCOUNT FIRST
+        let finalPrice = service.price;
+        const discountVal = service.discount_value || 0;
+
+      if (service.is_discount_active && discountVal > 0) {
+          if (service.discount_type === 'PERCENTAGE') {
+            finalPrice = service.price * (1 - discountVal / 100);
+          } else {
+            finalPrice = Math.max(0, service.price - discountVal);
+          }
+        }
+        sub += finalPrice * qty;
       }
     });
 
-    // UPDATED: Dynamically calculate the highest discount value based on the type
+    // GLOBAL OFFER ON THE NEW SUBTOTAL
+   const now = new Date();
     const bestOffer = offers
-      ?.filter((o) => o.is_active && sub >= o.min_order_amount)
+      ?.filter((o) => {
+        if (!o.is_active || sub < o.min_order_amount) return false;
+        
+        // Verify Dates match the backend reality (handle null dates safely)
+        if (o.start_date && o.end_date) {
+            const startDate = new Date(o.start_date);
+            const endDate = new Date(o.end_date);
+            return now >= startDate && now <= endDate;
+        }
+        return true; // Fallback if admin didn't set strict dates
+      })
       .map((o) => {
-        // Compute the actual AED value of the discount for comparison
-        const calculatedDiscount =
-          o.discount_type === "PERCENTAGE"
-            ? sub * (o.discount_amount / 100)
+        const calculatedDiscount = o.discount_type === "PERCENTAGE" 
+            ? sub * (o.discount_amount / 100) 
             : o.discount_amount;
         return { ...o, calculatedDiscount };
       })
@@ -383,14 +442,44 @@ export const CreateOrderPage = () => {
                               key={svc.id}
                               className="flex items-center justify-between"
                             >
-                              <div>
-                                <p className="text-sm font-bold text-slate-700">
-                                  {svc.category?.name || "Service"}
-                                </p>
-                                <p className="text-xs font-bold text-brand-primary">
-                                  AED {svc.price}
-                                </p>
-                              </div>
+                             <div>
+  <p className="text-sm font-bold text-slate-700">
+    {svc.category?.name || "Service"}
+  </p>
+  {/* <div className="flex items-center gap-2">
+    {svc.is_discount_active && (svc.discount_value || 0)> 0 ? (
+      <>
+        <p className="text-[10px] font-bold text-slate-400 line-through decoration-red-400/60">
+          AED {svc.price}
+        </p>
+        <p className="text-xs font-black text-amber-500">
+          AED {svc.discount_type === 'PERCENTAGE' 
+            ? (svc.price * (1 - svc.discount_value / 100)).toFixed(2) 
+            : Math.max(0, svc.price - svc.discount_value).toFixed(2)}
+        </p>
+      </>
+    ) : (
+      <p className="text-xs font-bold text-brand-primary">
+        AED {svc.price}
+      </p>
+    )}
+  </div> */}
+
+  <div className="flex items-center gap-2 mt-0.5">
+    {svc.is_discount_active && (svc.discount_value || 0) > 0 ? (
+      <>
+        <span className="text-[9px] font-bold text-slate-400 line-through">AED {svc.price}</span>
+        <span className="text-[10px] font-black text-amber-500">
+          AED {svc.discount_type === 'PERCENTAGE' 
+            ? (svc.price * (1 - (svc.discount_value || 0) / 100)).toFixed(2) 
+            : Math.max(0, svc.price - (svc.discount_value || 0)).toFixed(2)}
+        </span>
+      </>
+    ) : (
+      <span className="text-[10px] font-black text-brand-primary">AED {svc.price}</span>
+    )}
+  </div>
+</div>
                               <div className="flex items-center gap-3 bg-white p-1 rounded-xl shadow-sm border border-slate-100">
                                 <button
                                   onClick={(e) => {
@@ -581,7 +670,7 @@ export const CreateOrderPage = () => {
               </div>
             )}
 
-            {config?.referral_system_enabled && walletBalance > 0 && (
+          {walletBalance > 0 && (
               <div className="bg-white/[0.03] hover:bg-white/[0.05] border border-white/5 transition-colors p-5 rounded-2xl space-y-4">
                 <label className="flex items-center justify-between cursor-pointer group">
                   <div className="flex items-center gap-4 text-white">

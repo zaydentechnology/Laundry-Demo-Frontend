@@ -47,7 +47,34 @@ export const EditOrderCartModal = ({ isOpen, onClose, order, walletBalance }: an
     // This stops the 5-second refetch interval from wiping out the user's edits!
   }, [isOpen]); 
 
-  // Matrix math calculation
+  // // Matrix math calculation
+  // const { subtotal, discount, total } = useMemo(() => {
+  //   if (!items) return { subtotal: 0, discount: 0, total: 0 };
+    
+  //   let sub = 0;
+  //   Object.entries(cart).forEach(([cartKey, qty]) => {
+  //     if (qty <= 0) return;
+  //     const [itemId, catId] = cartKey.split('_').map(Number);
+  //     const item = items.find(i => i.id === itemId);
+  //     const service = item?.services?.find(s => s.service_category_id === catId);
+  //     if (service) sub += service.price * qty;
+  //   });
+
+  //   const bestOffer = offers
+  //     ?.filter(o => o.is_active && sub >= o.min_order_amount)
+  //     .map(o => {
+  //       const calculatedDiscount = o.discount_type === 'PERCENTAGE' 
+  //         ? sub * (o.discount_amount / 100) 
+  //         : o.discount_amount;
+  //       return { ...o, calculatedDiscount };
+  //     })
+  //     .sort((a, b) => b.calculatedDiscount - a.calculatedDiscount)[0];
+      
+  //   const disc = bestOffer ? bestOffer.calculatedDiscount : 0;
+    
+  //   return { subtotal: sub, discount: disc, total: Math.max(0, sub - disc) };
+  // }, [cart, items, offers]);
+  // Matrix math calculation (NOW WITH ITEM DISCOUNTS)
   const { subtotal, discount, total } = useMemo(() => {
     if (!items) return { subtotal: 0, discount: 0, total: 0 };
     
@@ -57,9 +84,24 @@ export const EditOrderCartModal = ({ isOpen, onClose, order, walletBalance }: an
       const [itemId, catId] = cartKey.split('_').map(Number);
       const item = items.find(i => i.id === itemId);
       const service = item?.services?.find(s => s.service_category_id === catId);
-      if (service) sub += service.price * qty;
+      
+      if (service) {
+        // Apply Item-Level Discount mathematically
+        let finalPrice = service.price;
+        const discountVal = service.discount_value || 0;
+        
+        if (service.is_discount_active && discountVal > 0) {
+          if (service.discount_type === 'PERCENTAGE') {
+            finalPrice = service.price * (1 - discountVal / 100);
+          } else {
+            finalPrice = Math.max(0, service.price - discountVal);
+          }
+        }
+        sub += finalPrice * qty;
+      }
     });
 
+    // Global cart discount applies to the newly reduced subtotal
     const bestOffer = offers
       ?.filter(o => o.is_active && sub >= o.min_order_amount)
       .map(o => {
@@ -154,10 +196,23 @@ export const EditOrderCartModal = ({ isOpen, onClose, order, walletBalance }: an
                   <div className="px-4 pb-4 pt-2 bg-slate-50/50 border-t border-slate-100 space-y-2">
                     {item.services.map((svc) => (
                       <div key={svc.id} className="flex items-center justify-between bg-white p-2 rounded-xl border border-slate-100">
-                        <div>
-                          <p className="text-xs font-bold text-slate-700">{svc.category?.name || "Service"}</p>
-                          <p className="text-[10px] font-black text-brand-primary">AED {svc.price}</p>
-                        </div>
+                       <div>
+  <p className="text-xs font-bold text-slate-700">{svc.category?.name || "Service"}</p>
+<div className="flex items-center gap-2 mt-0.5">
+    {svc.is_discount_active && (svc.discount_value || 0) > 0 ? (
+      <>
+        <span className="text-[9px] font-bold text-slate-400 line-through">AED {svc.price}</span>
+        <span className="text-[10px] font-black text-amber-500">
+          AED {svc.discount_type === 'PERCENTAGE' 
+            ? (svc.price * (1 - (svc.discount_value || 0) / 100)).toFixed(2) 
+            : Math.max(0, svc.price - (svc.discount_value || 0)).toFixed(2)}
+        </span>
+      </>
+    ) : (
+      <span className="text-[10px] font-black text-brand-primary">AED {svc.price}</span>
+    )}
+  </div>
+</div>
                         <div className="flex items-center gap-3">
                           <button onClick={(e) => { e.stopPropagation(); updateQuantity(item.id, svc.service_category_id, -1); }} className="h-7 w-7 rounded-lg bg-slate-50 flex items-center justify-center active:scale-90"><Minus size={12}/></button>
                           <span className="w-4 text-center font-black text-xs">{cart[`${item.id}_${svc.service_category_id}`] || 0}</span>

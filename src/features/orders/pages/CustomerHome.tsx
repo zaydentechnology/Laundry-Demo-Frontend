@@ -70,12 +70,13 @@ export const CustomerHome = () => {
         </div>
 
 {/* NEW: Referral & Wallet Card */}
-        {config?.referral_system_enabled && (
+      {/* NEW: Referral & Wallet Card - Decoupled from Referral System */}
+        {(config?.referral_system_enabled || (profile?.wallet_balance || 0) > 0) && (
           <div className="bg-gradient-to-b from-slate-900 to-slate-950 p-6 sm:p-8 rounded-[2.5rem] border border-slate-800 shadow-2xl shadow-brand-primary/10 flex flex-col text-white overflow-hidden relative animate-in zoom-in-95 duration-500">
             <div className="absolute top-0 right-0 w-64 h-64 bg-brand-primary rounded-full blur-[80px] opacity-10 -mr-20 -mt-20 pointer-events-none"></div>
 
             <div className="flex flex-col md:flex-row items-center justify-between gap-6 z-10">
-              {/* Wallet Section - Scaled Down & Refined */}
+              {/* Wallet Section */}
               <div className="flex items-center gap-4 w-full md:w-auto">
                 <div className="h-12 w-12 bg-white/5 rounded-2xl border border-white/10 flex items-center justify-center backdrop-blur-md shrink-0 shadow-inner">
                   <Wallet className="text-brand-primary" size={22} />
@@ -95,8 +96,8 @@ export const CustomerHome = () => {
                 </div>
               </div>
 
-              {/* Referral Code Section - Scaled Down & Styled like a Coupon */}
-              {profile?.referral_code && (
+              {/* Referral Code Section - ONLY SHOW IF REFERRALS ARE ENABLED */}
+              {config?.referral_system_enabled && profile?.referral_code && (
                 <div className="bg-white/[0.03] border border-white/10 p-4 rounded-2xl w-full md:w-auto backdrop-blur-md flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 justify-between">
                   <div>
                     <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">
@@ -133,27 +134,26 @@ export const CustomerHome = () => {
               )}
             </div>
 
-            {/* Benefit & HIGHLIGHTED Conversion Rate Section */}
-            <div className="mt-6 flex flex-col lg:flex-row items-stretch lg:items-center gap-3 z-10">
-              
-              <div className="bg-brand-primary/10 border border-brand-primary/20 p-4 rounded-2xl flex items-center gap-3 flex-1">
-                <Gift className="text-brand-primary shrink-0" size={20} />
-                <p className="text-xs sm:text-sm font-medium text-slate-300 leading-snug">
-                  Get <span className="font-black text-white">{config?.reward_credits_per_referral || 0} credits</span> when a friend signs up and completes an order!
-                </p>
-              </div>
+            {/* Benefit & Conversion Rate Section - ONLY SHOW IF REFERRALS ARE ENABLED */}
+            {config?.referral_system_enabled && (
+              <div className="mt-6 flex flex-col lg:flex-row items-stretch lg:items-center gap-3 z-10">
+                <div className="bg-brand-primary/10 border border-brand-primary/20 p-4 rounded-2xl flex items-center gap-3 flex-1">
+                  <Gift className="text-brand-primary shrink-0" size={20} />
+                  <p className="text-xs sm:text-sm font-medium text-slate-300 leading-snug">
+                    Get <span className="font-black text-white">{config?.reward_credits_per_referral || 0} credits</span> when a friend signs up and completes an order!
+                  </p>
+                </div>
 
-              {/* The "Golden Hook" - Massively Upgraded Conversion Rate Badge */}
-              <div className="bg-gradient-to-r from-amber-500 to-orange-500 p-[1px] rounded-2xl shrink-0 shadow-lg shadow-orange-500/20">
-                <div className="bg-slate-950 px-5 py-3.5 rounded-[15px] flex items-center justify-center gap-2.5 h-full">
-                  <Sparkles size={16} className="text-amber-400 animate-pulse" />
-                  <span className="text-slate-300 font-bold text-sm sm:text-base whitespace-nowrap">
-                    1 Credit = <span className="text-amber-400 font-black tracking-wide">{config?.credit_conversion_rate} AED</span>
-                  </span>
+                <div className="bg-gradient-to-r from-amber-500 to-orange-500 p-[1px] rounded-2xl shrink-0 shadow-lg shadow-orange-500/20">
+                  <div className="bg-slate-950 px-5 py-3.5 rounded-[15px] flex items-center justify-center gap-2.5 h-full">
+                    <Sparkles size={16} className="text-amber-400 animate-pulse" />
+                    <span className="text-slate-300 font-bold text-sm sm:text-base whitespace-nowrap">
+                      1 Credit = <span className="text-amber-400 font-black tracking-wide">{config?.credit_conversion_rate} AED</span>
+                    </span>
+                  </div>
                 </div>
               </div>
-
-            </div>
+            )}
           </div>
         )}
 

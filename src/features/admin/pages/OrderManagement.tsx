@@ -14,6 +14,7 @@ import * as XLSX from 'xlsx';
 
 export const OrderManagement = () => {
   const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('ALL');
   const [editingOrder, setEditingOrder] = useState<any>(null); 
   const [isReportMode, setIsReportMode] = useState(false);
   const [dateRange, setDateRange] = useState({ from: '', to: '' });
@@ -32,16 +33,29 @@ export const OrderManagement = () => {
     enabled: !!editingOrder, 
   });
 
-  const matrixOptions = useMemo(() => {
+const matrixOptions = useMemo(() => {
     const options: any[] = [];
     masterItems.forEach((item: any) => {
       item.services?.forEach((svc: any) => {
+        
+        // Calculate the discounted price for the Admin Dropdown
+        let finalPrice = svc.price;
+        const isDiscounted = svc.is_discount_active && svc.discount_value > 0;
+        
+        if (isDiscounted) {
+          finalPrice = svc.discount_type === 'PERCENTAGE' 
+            ? svc.price * (1 - svc.discount_value / 100) 
+            : Math.max(0, svc.price - svc.discount_value);
+        }
+
         options.push({
           item_id: item.id,
           item_name: item.name,
           service_category_id: svc.service_category_id,
           service_name: svc.category?.name || "Service",
-          price: svc.price
+          original_price: svc.price,
+          price: finalPrice, // This is now the discounted price!
+          is_discounted: isDiscounted
         });
       });
     });
@@ -82,9 +96,15 @@ export const OrderManagement = () => {
           if (orderDate > toDate) matchesDate = false;
         }
       }
-      return matchesSearch && matchesDate;
+
+      // <-- NEW STATUS FILTER LOGIC -->
+      let matchesStatus = true;
+      if (statusFilter !== 'ALL') {
+        matchesStatus = o.status === statusFilter;
+      }
+     return matchesSearch && matchesDate && matchesStatus;
     });
-  }, [orders, search, isReportMode, dateRange]);
+  }, [orders, search, isReportMode, dateRange, statusFilter]);
 
   const handleExportExcel = () => {
     if (filteredOrders.length === 0) return toast.error("No data to export");
@@ -164,6 +184,18 @@ export const OrderManagement = () => {
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-brand-primary transition-colors" size={18} />
               <input type="text" placeholder="Search ID or Customer..." value={search} onChange={(e) => setSearch(e.target.value)} className="w-full pl-12 pr-4 py-4 bg-white border border-slate-100 rounded-2xl font-bold shadow-sm focus:ring-2 focus:ring-brand-primary outline-none transition-all" />
             </div>
+
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="px-4 py-4 bg-white border border-slate-100 rounded-2xl font-bold text-slate-600 shadow-sm focus:ring-2 focus:ring-brand-primary outline-none transition-all cursor-pointer"
+            >
+              <option value="ALL">All Statuses</option>
+              <option value="NEW_ORDER">New Order</option>
+              <option value="PICKED_UP">Picked Up</option>
+              <option value="DELIVERED">Delivered</option>
+              <option value="CANCELLED">Cancelled</option>
+            </select>
             <button onClick={() => setIsReportMode(!isReportMode)} className={cn("px-6 py-4 rounded-2xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 transition-all shadow-sm border", isReportMode ? "bg-brand-primary text-white border-brand-primary" : "bg-white text-slate-600 border-slate-100 hover:bg-slate-50")}>
               <BarChart2 size={18} /> {isReportMode ? "Exit Report" : "Analytics"}
             </button>
@@ -187,6 +219,7 @@ export const OrderManagement = () => {
               <tr>
                 <th className="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Order Info</th>
                 <th className="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Customer</th>
+                <th className="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Location</th>
                 <th className="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Schedule</th>
                 <th className="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Amount</th>
                 <th className="p-6"></th>
@@ -211,6 +244,13 @@ export const OrderManagement = () => {
                   <td className="p-6 align-top">
                     <p className="font-bold text-slate-900">{order.customer?.full_name || 'Guest'}</p>
                     <p className="text-[10px] font-bold text-slate-400 uppercase">{order.customer?.mobile}</p>
+                  </td>
+
+                  <td className="p-6 align-top">
+                    <p className="text-sm font-bold text-slate-800">{order.customer?.building_name || 'N/A'}</p>
+                    {order.customer?.flat_number && (
+                      <p className="text-[10px] font-bold text-slate-500 uppercase mt-0.5">Flat {order.customer.flat_number}</p>
+                    )}
                   </td>
                   <td className="p-6 align-top">
                     <div className="flex flex-col gap-1 text-[10px] font-bold text-slate-500">
@@ -373,11 +413,11 @@ export const OrderManagement = () => {
                       }}
                     >
                       <option value="" disabled>+ Add custom service...</option>
-                      {matrixOptions.map((opt: any) => (
-                        <option key={`${opt.item_id}_${opt.service_category_id}`} value={`${opt.item_id}_${opt.service_category_id}`}>
-                          {opt.item_name} - {opt.service_name} (AED {opt.price})
-                        </option>
-                      ))}
+                     {matrixOptions.map((opt: any) => (
+  <option key={`${opt.item_id}_${opt.service_category_id}`} value={`${opt.item_id}_${opt.service_category_id}`}>
+    {opt.item_name} - {opt.service_name} (AED {opt.price.toFixed(2)}{opt.is_discounted ? ' • PROMO' : ''})
+  </option>
+))}
                     </select>
                   </div>
                 </div>

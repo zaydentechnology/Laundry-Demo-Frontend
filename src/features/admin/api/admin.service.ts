@@ -54,6 +54,9 @@ export interface ItemServicePrice {
   service_category_id: number;
   price: number;
   category?: ServiceCategory;
+  is_discount_active?: boolean;
+  discount_type?: "PERCENTAGE" | "FIXED";
+  discount_value?: number;
 }
 
 export interface LaundryItem {

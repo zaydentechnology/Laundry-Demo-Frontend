@@ -1,15 +1,26 @@
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { adminService } from '../api/admin.service';
-import { Edit2, PlusCircle, Loader2, Tags } from 'lucide-react'; // Removed Shirt logo
+import { Edit2, PlusCircle, Loader2, Tags,Trash2 } from 'lucide-react'; // Removed Shirt logo
 import { useState } from 'react';
 import { ServiceItemModal } from '../components/ServiceItemModal';
 import { CategoryManagementModal } from '../components/CategoryManagementModal'; 
+import { toast } from 'sonner';
 
 export const PriceManagement = () => {
   // 1. Manage Modal Visibility
   const [isItemModalOpen, setIsItemModalOpen] = useState(false);
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false); 
   const [selectedItem, setSelectedItem] = useState<any>(null);
+
+  const queryClient = useQueryClient();
+const deleteItemMutation = useMutation({
+  mutationFn: adminService.deleteItem,
+  onSuccess: () => {
+    queryClient.invalidateQueries({ queryKey: ['serviceItems'] });
+    toast.success("Item deleted successfully");
+  },
+  onError: () => toast.error("Failed to delete item")
+});
 
   // 2. Fetch Laundry Items
   const { data: items, isLoading } = useQuery({
@@ -61,47 +72,69 @@ export const PriceManagement = () => {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {items?.map((item: any) => (
-            <div key={item.id} className="bg-white p-6 rounded-[2.5rem] border border-slate-100 shadow-sm hover:border-brand-primary/20 transition-all group flex flex-col h-full">
-              
-              <div className="flex justify-between items-start mb-6">
-                <h3 className="text-xl font-black text-slate-900 pr-4">{item.name}</h3>
-                <button
-                  onClick={() => handleEdit(item)}
-                  className="p-3 bg-slate-50 text-slate-400 rounded-xl hover:bg-slate-900 hover:text-white transition-all shadow-sm shrink-0"
-                >
-                  <Edit2 size={16} />
-                </button>
-              </div>
+       {items?.map((item: any) => (
+  <div key={item.id} className="bg-white p-6 rounded-[2.5rem] border border-slate-100 shadow-sm hover:border-brand-primary/20 transition-all group flex flex-col h-full">
+    
+    <div className="flex justify-between items-start mb-6">
+      <h3 className="text-xl font-black text-slate-900 pr-4">{item.name}</h3>
+      <div className="flex gap-2">
+        <button
+          onClick={() => handleEdit(item)}
+          className="p-3 bg-slate-50 text-slate-400 rounded-xl hover:bg-slate-900 hover:text-white transition-all shadow-sm shrink-0"
+        >
+          <Edit2 size={16} />
+        </button>
+        <button
+          onClick={() => {
+            if (window.confirm(`Are you sure you want to permanently delete ${item.name}?`)) {
+              deleteItemMutation.mutate(item.id);
+            }
+          }}
+          className="p-3 bg-red-50 text-red-400 rounded-xl hover:bg-red-500 hover:text-white transition-all shadow-sm shrink-0"
+        >
+          <Trash2 size={16} />
+        </button>
+      </div>
+    </div>
 
-              {/* NEW PRICING DISPLAY: Renders the actual matrix list instead of a meaningless base price */}
-              <div className="mt-auto pt-4 border-t border-slate-100/50">
-                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-3">Configured Services</p>
-                
-                <div className="space-y-1.5">
-                  {item.services && item.services.length > 0 ? (
-                    item.services.map((svc: any, idx: number) => (
-                      <div key={idx} className="flex justify-between items-center bg-slate-50/50 p-2.5 rounded-xl border border-slate-50">
-                        <span className="text-[11px] font-bold text-slate-600">
-                          {svc.category?.name || "Standard Service"}
-                        </span>
-                        <span className="text-sm font-black text-slate-900 tracking-tight">
-                          AED {svc.price?.toFixed(2)}
-                        </span>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="bg-slate-50 p-4 rounded-xl text-center">
-                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                        No pricing configured
-                      </span>
-                    </div>
+    <div className="mt-auto pt-4 border-t border-slate-100/50">
+      <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-3">Configured Services</p>
+      
+      <div className="space-y-1.5">
+        {item.services && item.services.length > 0 ? (
+          item.services.map((svc: any, idx: number) => {
+            const isDiscounted = svc.is_discount_active && svc.discount_value > 0;
+            const finalPrice = isDiscounted 
+              ? (svc.discount_type === 'PERCENTAGE' ? svc.price * (1 - svc.discount_value / 100) : Math.max(0, svc.price - svc.discount_value))
+              : svc.price;
+
+            return (
+              <div key={idx} className={`flex justify-between items-center p-2.5 rounded-xl border ${isDiscounted ? 'bg-amber-50/50 border-amber-100' : 'bg-slate-50/50 border-slate-50'}`}>
+                <span className="text-[11px] font-bold text-slate-600 flex items-center gap-1.5">
+                  {isDiscounted && <Tags size={10} className="text-amber-500" />}
+                  {svc.category?.name || "Standard Service"}
+                </span>
+                <div className="flex items-center gap-2">
+                  {isDiscounted && (
+                    <span className="text-[10px] font-bold text-slate-400 line-through decoration-red-400/50">AED {svc.price?.toFixed(2)}</span>
                   )}
+                  <span className={`text-sm font-black tracking-tight ${isDiscounted ? 'text-amber-600' : 'text-slate-900'}`}>
+                    AED {finalPrice.toFixed(2)}
+                  </span>
                 </div>
               </div>
-              
-            </div>
-          ))}
+            );
+          })
+        ) : (
+          <div className="bg-slate-50 p-4 rounded-xl text-center">
+            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">No pricing configured</span>
+          </div>
+        )}
+      </div>
+    </div>
+    
+  </div>
+))}
         </div>
       )}
 
