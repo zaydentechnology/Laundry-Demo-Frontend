@@ -103,6 +103,7 @@ export const OrderDetailPage = () => {
   const hasSavings = rawSubtotal > displayTotal;
   
   const hasExistingFeedback = Boolean(order.notes && order.notes.trim().length > 0);
+  console.log("in orderDetailspgae.tsx",order)
 
   return (
     <div className="relative min-h-screen">
