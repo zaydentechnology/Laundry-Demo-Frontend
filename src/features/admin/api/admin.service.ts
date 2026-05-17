@@ -112,6 +112,10 @@ export const adminService = {
   createOffer: async (data: Omit<OfferResponse, "id">) =>
     (await api.post("/offers/", data)).data,
 
+  deleteOffer: async (id: number): Promise<void> => {
+    await api.delete(`/offers/${id}`);
+  },
+
   // --- SERVICE & ITEMS MANAGEMENT ---
   /** Fetch overarching categories like "Dry Clean", "Ironing" */
   getServiceCategories: async (): Promise<ServiceCategory[]> => {
