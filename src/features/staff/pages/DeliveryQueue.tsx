@@ -1,22 +1,20 @@
+// src/features/staff/pages/DeliveryQueue.tsx
 import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/api/axios';
-import { 
-  MapPin, Banknote, CreditCard, Clock, Calendar, 
-  Search, Phone, ChevronRight, Loader2, ChevronDown, ChevronUp, PackageOpen
-} from 'lucide-react';
+import { MapPin, Banknote, CreditCard, Clock, Calendar, Search, Phone, ChevronRight, Loader2, ChevronDown, ChevronUp, PackageOpen, FilterX } from 'lucide-react';
 import { toast } from 'sonner';
 import { formatSafeDate, formatTimeTo12h } from '@/utils/formatters';
 import { cn } from '@/utils/cn';
-
 import { CardSkeleton } from '@/components/ui/Skeleton';
 import { EmptyState } from '@/components/ui/EmptyState';
 
 export const DeliveryQueue = () => {
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
+  const [dateFilter, setDateFilter] = useState('');
   const [activeDeliveryId, setActiveDeliveryId] = useState<number | null>(null);
-  const [expandedOrderId, setExpandedOrderId] = useState<number | null>(null); // <-- NEW ACCORDION STATE
+  const [expandedOrderId, setExpandedOrderId] = useState<number | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<'CASH' | 'CARD'>('CASH');
 
   const { data: orders = [], isLoading } = useQuery({
@@ -28,19 +26,39 @@ export const DeliveryQueue = () => {
   });
 
   const filteredOrders = useMemo(() => {
-    const term = searchTerm.toLowerCase();
-    return orders.filter((o: any) => 
-      o.customer?.building_name?.toLowerCase().includes(term) ||
-      o.customer?.flat_number?.toLowerCase().includes(term) ||
-      o.customer?.full_name?.toLowerCase().includes(term) ||
-      o.customer?.mobile?.includes(term) ||
-      o.id.toString().includes(term)
-    );
-  }, [orders, searchTerm]);
+    return orders.filter((o: any) => {
+      // 1. Search Logic
+      const term = searchTerm.toLowerCase();
+      const matchesSearch = term === '' || 
+        o.customer?.building_name?.toLowerCase().includes(term) ||
+        o.customer?.flat_number?.toLowerCase().includes(term) ||
+        o.customer?.full_name?.toLowerCase().includes(term) ||
+        o.customer?.mobile?.includes(term) ||
+        o.id.toString().includes(term);
+
+      // 2. Date Filter Logic (Using Expected Delivery Date)
+      let matchesDate = true;
+      if (dateFilter) {
+        if (!o.expected_delivery_date) {
+          matchesDate = false;
+        } else {
+          // Extract Local Timezone date explicitly
+          const orderDate = new Date(o.expected_delivery_date);
+          const localYear = orderDate.getFullYear();
+          const localMonth = String(orderDate.getMonth() + 1).padStart(2, '0');
+          const localDay = String(orderDate.getDate()).padStart(2, '0');
+          
+          const localDateStr = `${localYear}-${localMonth}-${localDay}`;
+          matchesDate = localDateStr === dateFilter;
+        }
+      }
+
+      return matchesSearch && matchesDate;
+    });
+  }, [orders, searchTerm, dateFilter]);
 
   const deliverMutation = useMutation({
-    mutationFn: (payload: { id: number, data: any }) => 
-      api.post(`/operations/${payload.id}/deliver`, payload.data),
+    mutationFn: (payload: { id: number, data: any }) => api.post(`/operations/${payload.id}/deliver`, payload.data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['deliveryQueue'] });
       setActiveDeliveryId(null);
@@ -59,43 +77,69 @@ export const DeliveryQueue = () => {
 
   return (
     <div className="max-w-md mx-auto p-4 space-y-4 pb-24 min-h-screen bg-slate-50/50">
-      
-      <header className="space-y-4 mb-8">
+      <header className="space-y-4 mb-2">
         <div className="flex justify-between items-end">
-           <div>
-              <h1 className="text-4xl font-black text-slate-900 tracking-tighter">Deliveries</h1>
-              <p className="text-[10px] font-black text-brand-primary uppercase tracking-[0.3em]">Staff Terminal</p>
-           </div>
-           <div className="flex flex-col items-end">
-             <span className="text-2xl font-black text-slate-900 leading-none">{filteredOrders.length}</span>
-             <span className="text-[9px] font-bold text-slate-400 uppercase">Pending</span>
-           </div>
-        </div>
-
-        <div className="relative group">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-brand-primary transition-colors" size={20} />
-          <input 
-            type="text"
-            placeholder="Search Building, Flat, or Mobile..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-12 pr-4 py-4 bg-white border border-slate-200 rounded-2xl font-bold text-sm shadow-sm focus:ring-2 focus:ring-brand-primary outline-none transition-all placeholder:text-slate-300"
-          />
+          <div>
+            <h1 className="text-4xl font-black text-slate-900 tracking-tighter">Deliveries</h1>
+            <p className="text-[10px] font-black text-brand-primary uppercase tracking-[0.3em]">Staff Terminal</p>
+          </div>
+          <div className="flex flex-col items-end">
+            <span className="text-2xl font-black text-slate-900 leading-none">{filteredOrders.length}</span>
+            <span className="text-[9px] font-bold text-slate-400 uppercase">Pending</span>
+          </div>
         </div>
       </header>
 
+      {/* ENHANCED: Mobile-Optimized Sticky Search & Filter Bar */}
+      <div className="sticky top-2 z-10 space-y-3 bg-white/90 backdrop-blur-xl p-4 rounded-3xl border border-slate-100 shadow-sm mb-8">
+        
+        {/* Search Bar - Full Width */}
+        <div className="relative group">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-brand-primary transition-colors" size={18} />
+          <input 
+            type="text" 
+            placeholder="Search Building, Flat, or Mobile..." 
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl text-xs font-bold focus:ring-2 focus:ring-brand-primary outline-none transition-all placeholder:font-medium placeholder:text-slate-400"
+          />
+        </div>
+
+        {/* Date Filter & Clear Controls */}
+        <div className="flex items-center gap-2">
+          <div className="relative flex-1">
+            <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
+            <input 
+              type="date" 
+              value={dateFilter}
+              onChange={(e) => setDateFilter(e.target.value)}
+              className="w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl text-[11px] font-black uppercase tracking-widest focus:ring-2 focus:ring-brand-primary outline-none transition-all color-scheme-light"
+            />
+          </div>
+          
+          {(searchTerm || dateFilter) && (
+            <button 
+              onClick={() => { setSearchTerm(''); setDateFilter(''); }}
+              className="px-4 py-3.5 bg-red-50 text-red-500 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-red-100 transition-colors flex items-center justify-center gap-1.5 shrink-0 border border-red-100"
+            >
+              <FilterX size={14} /> Clear
+            </button>
+          )}
+        </div>
+      </div>
+
       {filteredOrders.length === 0 ? (
-        <EmptyState title="All Caught Up!" message="No matching deliveries found." />
+        <div className="pt-8">
+          <EmptyState title="All Caught Up!" message="No matching deliveries found for these filters." />
+        </div>
       ) : (
         <div className="grid gap-6">
           {filteredOrders.map((order: any) => (
             <div key={order.id} className="bg-white rounded-[2.5rem] border border-slate-100 shadow-xl shadow-slate-200/40 overflow-hidden relative group">
-              
               <div className="bg-slate-900 p-6 text-white relative">
                 <div className="absolute top-0 right-0 p-6 opacity-10">
                   <MapPin size={80} />
                 </div>
-                
                 <div className="relative z-10 space-y-1">
                   <div className="flex justify-between items-center mb-2">
                     <span className="text-[10px] font-black text-brand-primary uppercase tracking-[0.2em]">Drop-off Point</span>
@@ -120,7 +164,6 @@ export const DeliveryQueue = () => {
                       {formatSafeDate(order.pickup_date, 'dd MMM')}
                     </p>
                   </div>
-
                   <div className={cn("p-3 rounded-2xl border transition-colors", order.expected_delivery_date ? "bg-emerald-50 border-emerald-100" : "bg-amber-50 border-amber-100")}>
                     <p className={cn("text-[9px] font-black uppercase tracking-widest mb-1 flex items-center gap-1", order.expected_delivery_date ? "text-emerald-600" : "text-amber-600")}>
                       <Clock size={10} /> Delivery Date
@@ -146,7 +189,6 @@ export const DeliveryQueue = () => {
                   </a>
                 </div>
 
-                {/* NEW: ITEM ACCORDION FOR DRIVERS */}
                 <div className="border border-slate-100 rounded-2xl overflow-hidden">
                   <button 
                     onClick={() => setExpandedOrderId(expandedOrderId === order.id ? null : order.id)}
@@ -158,7 +200,7 @@ export const DeliveryQueue = () => {
                     </div>
                     {expandedOrderId === order.id ? <ChevronUp size={16} className="text-slate-400" /> : <ChevronDown size={16} className="text-slate-400" />}
                   </button>
-                  
+
                   {expandedOrderId === order.id && (
                     <div className="p-4 bg-white space-y-3 divide-y divide-slate-50 border-t border-slate-100">
                       {order.items?.map((item: any, idx: number) => (
@@ -172,7 +214,6 @@ export const DeliveryQueue = () => {
                           </span>
                         </div>
                       ))}
-
                       {order.hanger_needed && (
                         <div className="bg-indigo-50 border border-indigo-100 p-3 rounded-xl flex items-center gap-3 mt-4 pt-3">
                           <div className="h-8 w-8 bg-indigo-100 text-indigo-500 rounded-lg flex items-center justify-center shrink-0">
@@ -186,11 +227,6 @@ export const DeliveryQueue = () => {
                       )}
                     </div>
                   )}
-                  
-
-
-
-             
                 </div>
 
                 <div className="flex justify-between items-center px-2">
@@ -212,12 +248,21 @@ export const DeliveryQueue = () => {
                         <span className="text-[10px] font-black">CARD</span>
                       </button>
                     </div>
-                    
                     <div className="flex gap-2">
-                       <button onClick={() => setActiveDeliveryId(null)} className="flex-1 py-4 bg-slate-100 text-slate-500 rounded-2xl font-black text-[10px] uppercase tracking-widest">Cancel</button>
-                       <button disabled={deliverMutation.isPending} onClick={() => deliverMutation.mutate({ id: order.id, data: { received_amount: order.final_price || order.estimated_price, payment_method: paymentMethod } })} className="flex-[2] py-4 bg-emerald-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl shadow-emerald-200 flex items-center justify-center gap-2">
-                         {deliverMutation.isPending ? <Loader2 size={16} className="animate-spin" /> : "Confirm Drop"}
-                       </button>
+                      <button onClick={() => setActiveDeliveryId(null)} className="flex-1 py-4 bg-slate-100 text-slate-500 rounded-2xl font-black text-[10px] uppercase tracking-widest">Cancel</button>
+                      <button 
+                        disabled={deliverMutation.isPending} 
+                        onClick={() => deliverMutation.mutate({ 
+                          id: order.id, 
+                          data: { 
+                            received_amount: order.final_price || order.estimated_price, 
+                            payment_method: paymentMethod 
+                          } 
+                        })} 
+                        className="flex-[2] py-4 bg-emerald-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl shadow-emerald-200 flex items-center justify-center gap-2"
+                      >
+                        {deliverMutation.isPending ? <Loader2 size={16} className="animate-spin" /> : "Confirm Drop"}
+                      </button>
                     </div>
                   </div>
                 ) : (
@@ -233,6 +278,241 @@ export const DeliveryQueue = () => {
     </div>
   );
 };
+// import { useState, useMemo } from 'react';
+// import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+// import api from '@/api/axios';
+// import { 
+//   MapPin, Banknote, CreditCard, Clock, Calendar, 
+//   Search, Phone, ChevronRight, Loader2, ChevronDown, ChevronUp, PackageOpen
+// } from 'lucide-react';
+// import { toast } from 'sonner';
+// import { formatSafeDate, formatTimeTo12h } from '@/utils/formatters';
+// import { cn } from '@/utils/cn';
+
+// import { CardSkeleton } from '@/components/ui/Skeleton';
+// import { EmptyState } from '@/components/ui/EmptyState';
+
+// export const DeliveryQueue = () => {
+//   const queryClient = useQueryClient();
+//   const [searchTerm, setSearchTerm] = useState('');
+//   const [activeDeliveryId, setActiveDeliveryId] = useState<number | null>(null);
+//   const [expandedOrderId, setExpandedOrderId] = useState<number | null>(null); // <-- NEW ACCORDION STATE
+//   const [paymentMethod, setPaymentMethod] = useState<'CASH' | 'CARD'>('CASH');
+
+//   const { data: orders = [], isLoading } = useQuery({
+//     queryKey: ['deliveryQueue'],
+//     queryFn: async () => (await api.get('/operations/delivery-queue')).data,
+//     refetchInterval: 10000,
+//     refetchOnWindowFocus: true,
+//     staleTime: 5000,
+//   });
+
+//   const filteredOrders = useMemo(() => {
+//     const term = searchTerm.toLowerCase();
+//     return orders.filter((o: any) => 
+//       o.customer?.building_name?.toLowerCase().includes(term) ||
+//       o.customer?.flat_number?.toLowerCase().includes(term) ||
+//       o.customer?.full_name?.toLowerCase().includes(term) ||
+//       o.customer?.mobile?.includes(term) ||
+//       o.id.toString().includes(term)
+//     );
+//   }, [orders, searchTerm]);
+
+//   const deliverMutation = useMutation({
+//     mutationFn: (payload: { id: number, data: any }) => 
+//       api.post(`/operations/${payload.id}/deliver`, payload.data),
+//     onSuccess: () => {
+//       queryClient.invalidateQueries({ queryKey: ['deliveryQueue'] });
+//       setActiveDeliveryId(null);
+//       setExpandedOrderId(null);
+//       toast.success("Order Delivered Successfully!");
+//     },
+//     onError: (err: any) => toast.error(err.response?.data?.detail || "Delivery failed.")
+//   });
+
+//   if (isLoading) return (
+//     <div className="max-w-md mx-auto p-4 space-y-4">
+//       <div className="h-10 w-48 bg-slate-200 animate-pulse rounded-xl mb-6" />
+//       {[1, 2, 3].map(i => <CardSkeleton key={i} />)}
+//     </div>
+//   );
+
+//   return (
+//     <div className="max-w-md mx-auto p-4 space-y-4 pb-24 min-h-screen bg-slate-50/50">
+      
+//       <header className="space-y-4 mb-8">
+//         <div className="flex justify-between items-end">
+//            <div>
+//               <h1 className="text-4xl font-black text-slate-900 tracking-tighter">Deliveries</h1>
+//               <p className="text-[10px] font-black text-brand-primary uppercase tracking-[0.3em]">Staff Terminal</p>
+//            </div>
+//            <div className="flex flex-col items-end">
+//              <span className="text-2xl font-black text-slate-900 leading-none">{filteredOrders.length}</span>
+//              <span className="text-[9px] font-bold text-slate-400 uppercase">Pending</span>
+//            </div>
+//         </div>
+
+//         <div className="relative group">
+//           <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-brand-primary transition-colors" size={20} />
+//           <input 
+//             type="text"
+//             placeholder="Search Building, Flat, or Mobile..."
+//             value={searchTerm}
+//             onChange={(e) => setSearchTerm(e.target.value)}
+//             className="w-full pl-12 pr-4 py-4 bg-white border border-slate-200 rounded-2xl font-bold text-sm shadow-sm focus:ring-2 focus:ring-brand-primary outline-none transition-all placeholder:text-slate-300"
+//           />
+//         </div>
+//       </header>
+
+//       {filteredOrders.length === 0 ? (
+//         <EmptyState title="All Caught Up!" message="No matching deliveries found." />
+//       ) : (
+//         <div className="grid gap-6">
+//           {filteredOrders.map((order: any) => (
+//             <div key={order.id} className="bg-white rounded-[2.5rem] border border-slate-100 shadow-xl shadow-slate-200/40 overflow-hidden relative group">
+              
+//               <div className="bg-slate-900 p-6 text-white relative">
+//                 <div className="absolute top-0 right-0 p-6 opacity-10">
+//                   <MapPin size={80} />
+//                 </div>
+                
+//                 <div className="relative z-10 space-y-1">
+//                   <div className="flex justify-between items-center mb-2">
+//                     <span className="text-[10px] font-black text-brand-primary uppercase tracking-[0.2em]">Drop-off Point</span>
+//                     <span className="text-[10px] font-black text-slate-400">#{order.id}</span>
+//                   </div>
+//                   <h2 className="text-2xl font-black tracking-tight uppercase leading-tight">
+//                     {order.customer?.building_name || "Self Pickup"}
+//                   </h2>
+//                   <div className="inline-block bg-brand-primary text-slate-900 px-3 py-1 rounded-lg font-black text-sm mt-1">
+//                     FLAT / VILLA: {order.customer?.flat_number || "N/A"}
+//                   </div>
+//                 </div>
+//               </div>
+
+//               <div className="p-6 space-y-6">
+//                 <div className="grid grid-cols-2 gap-3">
+//                   <div className="bg-slate-50 p-3 rounded-2xl border border-slate-100">
+//                     <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-1">
+//                       <Calendar size={10} /> Picked Up
+//                     </p>
+//                     <p className="text-xs font-bold text-slate-700">
+//                       {formatSafeDate(order.pickup_date, 'dd MMM')}
+//                     </p>
+//                   </div>
+
+//                   <div className={cn("p-3 rounded-2xl border transition-colors", order.expected_delivery_date ? "bg-emerald-50 border-emerald-100" : "bg-amber-50 border-amber-100")}>
+//                     <p className={cn("text-[9px] font-black uppercase tracking-widest mb-1 flex items-center gap-1", order.expected_delivery_date ? "text-emerald-600" : "text-amber-600")}>
+//                       <Clock size={10} /> Delivery Date
+//                     </p>
+//                     <p className={cn("text-xs font-black", order.expected_delivery_date ? "text-emerald-700" : "text-amber-700")}>
+//                       {order.expected_delivery_date ? `${formatSafeDate(order.expected_delivery_date, 'dd MMM')} @ ${formatTimeTo12h(order.expected_delivery_time)}` : "NA"}
+//                     </p>
+//                   </div>
+//                 </div>
+
+//                 <div className="flex items-center justify-between bg-slate-50/50 p-4 rounded-2xl">
+//                   <div className="flex items-center gap-3">
+//                     <div className="h-10 w-10 rounded-full bg-white shadow-sm flex items-center justify-center font-black text-brand-primary border border-slate-100">
+//                       {order.customer?.full_name?.charAt(0)}
+//                     </div>
+//                     <div>
+//                       <p className="text-sm font-black text-slate-900">{order.customer?.full_name}</p>
+//                       <p className="text-xs font-bold text-slate-400">{order.customer?.mobile}</p>
+//                     </div>
+//                   </div>
+//                   <a href={`tel:${order.customer?.mobile}`} className="h-10 w-10 bg-white border border-slate-200 flex items-center justify-center rounded-xl text-emerald-500 shadow-sm hover:bg-emerald-50 transition-colors">
+//                     <Phone size={18} fill="currentColor" />
+//                   </a>
+//                 </div>
+
+//                 {/* NEW: ITEM ACCORDION FOR DRIVERS */}
+//                 <div className="border border-slate-100 rounded-2xl overflow-hidden">
+//                   <button 
+//                     onClick={() => setExpandedOrderId(expandedOrderId === order.id ? null : order.id)}
+//                     className="w-full flex items-center justify-between p-4 bg-slate-50/50 hover:bg-slate-100 transition-colors"
+//                   >
+//                     <div className="flex items-center gap-2">
+//                       <PackageOpen size={16} className="text-slate-400" />
+//                       <span className="text-[10px] font-black uppercase tracking-widest text-slate-600">View Items ({order.items?.length || 0})</span>
+//                     </div>
+//                     {expandedOrderId === order.id ? <ChevronUp size={16} className="text-slate-400" /> : <ChevronDown size={16} className="text-slate-400" />}
+//                   </button>
+                  
+//                   {expandedOrderId === order.id && (
+//                     <div className="p-4 bg-white space-y-3 divide-y divide-slate-50 border-t border-slate-100">
+//                       {order.items?.map((item: any, idx: number) => (
+//                         <div key={idx} className="flex justify-between items-center pt-2 first:pt-0">
+//                           <div className="flex flex-col">
+//                             <span className="text-xs font-bold text-slate-700">{item.item?.name || "Item"}</span>
+//                             <span className="text-[9px] font-black text-brand-primary uppercase">{item.service_category?.name || "Service"}</span>
+//                           </div>
+//                           <span className="text-xs font-black text-slate-900 bg-slate-50 px-2 py-1 rounded-md border border-slate-100">
+//                             x{item.final_quantity || item.estimated_quantity}
+//                           </span>
+//                         </div>
+//                       ))}
+
+//                       {order.hanger_needed && (
+//                         <div className="bg-indigo-50 border border-indigo-100 p-3 rounded-xl flex items-center gap-3 mt-4 pt-3">
+//                           <div className="h-8 w-8 bg-indigo-100 text-indigo-500 rounded-lg flex items-center justify-center shrink-0">
+//                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 4v11"/><path d="M12 4a3 3 0 0 1 3-3"/><path d="M12 4a3 3 0 0 0-3-3"/><path d="M5 15h14l-7 7-7-7Z"/></svg>
+//                           </div>
+//                           <div>
+//                             <span className="text-[10px] font-black uppercase tracking-widest text-indigo-700 block mb-0.5">Provide Hangers</span>
+//                             <span className="text-xs font-bold text-indigo-500">Customer requested hung delivery</span>
+//                           </div>
+//                         </div>
+//                       )}
+//                     </div>
+//                   )}
+                  
+
+
+
+             
+//                 </div>
+
+//                 <div className="flex justify-between items-center px-2">
+//                   <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Amount to Collect</span>
+//                   <p className="text-2xl font-black text-slate-900 tracking-tighter italic">
+//                     AED {order.final_price || order.estimated_price}
+//                   </p>
+//                 </div>
+
+//                 {activeDeliveryId === order.id ? (
+//                   <div className="pt-2 space-y-4 animate-in slide-in-from-bottom-2 duration-300">
+//                     <div className="flex gap-2">
+//                       <button onClick={() => setPaymentMethod('CASH')} className={cn("flex-1 p-4 rounded-2xl border-2 flex flex-col items-center gap-1 transition-all", paymentMethod === 'CASH' ? 'border-emerald-500 bg-emerald-50 text-emerald-700' : 'border-slate-100 text-slate-300')}>
+//                         <Banknote size={24} />
+//                         <span className="text-[10px] font-black">CASH</span>
+//                       </button>
+//                       <button onClick={() => setPaymentMethod('CARD')} className={cn("flex-1 p-4 rounded-2xl border-2 flex flex-col items-center gap-1 transition-all", paymentMethod === 'CARD' ? 'border-emerald-500 bg-emerald-50 text-emerald-700' : 'border-slate-100 text-slate-300')}>
+//                         <CreditCard size={24} />
+//                         <span className="text-[10px] font-black">CARD</span>
+//                       </button>
+//                     </div>
+                    
+//                     <div className="flex gap-2">
+//                        <button onClick={() => setActiveDeliveryId(null)} className="flex-1 py-4 bg-slate-100 text-slate-500 rounded-2xl font-black text-[10px] uppercase tracking-widest">Cancel</button>
+//                        <button disabled={deliverMutation.isPending} onClick={() => deliverMutation.mutate({ id: order.id, data: { received_amount: order.final_price || order.estimated_price, payment_method: paymentMethod } })} className="flex-[2] py-4 bg-emerald-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl shadow-emerald-200 flex items-center justify-center gap-2">
+//                          {deliverMutation.isPending ? <Loader2 size={16} className="animate-spin" /> : "Confirm Drop"}
+//                        </button>
+//                     </div>
+//                   </div>
+//                 ) : (
+//                   <button onClick={() => setActiveDeliveryId(order.id)} className="w-full py-5 bg-slate-900 text-white rounded-[1.5rem] font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 shadow-xl shadow-slate-200">
+//                     Mark as Delivered <ChevronRight size={18} />
+//                   </button>
+//                 )}
+//               </div>
+//             </div>
+//           ))}
+//         </div>
+//       )}
+//     </div>
+//   );
+// };
 // import { useState, useMemo } from 'react';
 // import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 // import api from '@/api/axios';

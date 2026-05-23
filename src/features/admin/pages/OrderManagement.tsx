@@ -3,11 +3,7 @@ import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { adminService } from '../api/admin.service';
 import { formatOrderId, formatSafeDate, formatTimeTo12h } from '@/utils/formatters';
-import { 
-  Search, Loader2, Edit3, Package, X, MinusCircle, 
-  AlertCircle, Download, BarChart2, CalendarDays, 
-  Clock, StickyNote, Lock
-} from 'lucide-react';
+import { Search, Loader2, Edit3, Package, X, MinusCircle, AlertCircle, Download, BarChart2, CalendarDays, Clock, StickyNote, Lock } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/utils/cn';
 import * as XLSX from 'xlsx';
@@ -15,46 +11,41 @@ import * as XLSX from 'xlsx';
 export const OrderManagement = () => {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
-  const [editingOrder, setEditingOrder] = useState<any>(null); 
+  const [editingOrder, setEditingOrder] = useState<any>(null);
   const [isReportMode, setIsReportMode] = useState(false);
   const [dateRange, setDateRange] = useState({ from: '', to: '' });
-
   const queryClient = useQueryClient();
 
   const { data: orders = [], isLoading } = useQuery({
     queryKey: ['adminAllOrders'],
     queryFn: adminService.getAllOrders,
-    refetchInterval: 15000, 
+    refetchInterval: 15000,
   });
 
   const { data: masterItems = [] } = useQuery({
     queryKey: ['serviceItems'],
     queryFn: adminService.getItems,
-    enabled: !!editingOrder, 
+    enabled: !!editingOrder,
   });
 
-const matrixOptions = useMemo(() => {
+  const matrixOptions = useMemo(() => {
     const options: any[] = [];
     masterItems.forEach((item: any) => {
       item.services?.forEach((svc: any) => {
-        
-        // Calculate the discounted price for the Admin Dropdown
         let finalPrice = svc.price;
         const isDiscounted = svc.is_discount_active && svc.discount_value > 0;
-        
         if (isDiscounted) {
           finalPrice = svc.discount_type === 'PERCENTAGE' 
             ? svc.price * (1 - svc.discount_value / 100) 
             : Math.max(0, svc.price - svc.discount_value);
         }
-
         options.push({
           item_id: item.id,
           item_name: item.name,
           service_category_id: svc.service_category_id,
           service_name: svc.category?.name || "Service",
           original_price: svc.price,
-          price: finalPrice, // This is now the discounted price!
+          price: finalPrice, 
           is_discounted: isDiscounted
         });
       });
@@ -78,13 +69,18 @@ const matrixOptions = useMemo(() => {
     return orders.filter((o: any) => {
       const searchLower = search.toLowerCase();
       const customerName = o.customer?.full_name?.toLowerCase() || '';
-      const orderIdStr = o.id?.toString() || '';
-      const matchesSearch = customerName.includes(searchLower) || orderIdStr.includes(searchLower);
+      const customerMobile = o.customer?.mobile?.toLowerCase() || '';
+      const customerBuilding = o.customer?.building_name?.toLowerCase() || '';
+      
+      const matchesSearch = 
+        customerName.includes(searchLower) || 
+        customerMobile.includes(searchLower) || 
+        customerBuilding.includes(searchLower);
 
       let matchesDate = true;
       if (isReportMode && (dateRange.from || dateRange.to)) {
         const orderDate = new Date(o.created_at || o.pickup_date);
-        orderDate.setHours(0, 0, 0, 0); 
+        orderDate.setHours(0, 0, 0, 0);
         if (dateRange.from) {
           const fromDate = new Date(dateRange.from);
           fromDate.setHours(0, 0, 0, 0);
@@ -97,33 +93,41 @@ const matrixOptions = useMemo(() => {
         }
       }
 
-      // <-- NEW STATUS FILTER LOGIC -->
       let matchesStatus = true;
       if (statusFilter !== 'ALL') {
         matchesStatus = o.status === statusFilter;
       }
-     return matchesSearch && matchesDate && matchesStatus;
+
+      return matchesSearch && matchesDate && matchesStatus;
     });
   }, [orders, search, isReportMode, dateRange, statusFilter]);
 
   const handleExportExcel = () => {
     if (filteredOrders.length === 0) return toast.error("No data to export");
 
-    const summaryData = filteredOrders.map((o: any) => ({
-      "Order Number": formatOrderId(o.id),
-      "Order Date": new Date(o.created_at).toLocaleDateString(),
-      "Customer Name": o.customer?.full_name || 'Guest',
-      "Mobile": o.customer?.mobile || 'N/A',
-      "Building": o.customer?.building_name || 'N/A',
-      "Pickup Date": o.pickup_date ? formatSafeDate(o.pickup_date, 'yyyy-MM-dd') : 'N/A',
-      "Pickup Window": o.pickup_time ? getPickupWindow(o.pickup_time) : 'N/A',
-      "Expected Delivery": o.expected_delivery_date ? formatSafeDate(o.expected_delivery_date, 'yyyy-MM-dd') : 'TBD',
-      "Delivery Time": o.expected_delivery_time ? formatTimeTo12h(o.expected_delivery_time) : 'TBD',
-      "Total Amount": (o.status === 'NEW_ORDER' ? o.estimated_price : (o.final_price || o.estimated_price)).toFixed(2),
-      "Status": o.status,
-      "Hanger": o.hanger_needed ? "Yes" : "No",
-      "Remarks": o.notes || ""
-    }));
+    const summaryData = filteredOrders.map((o: any) => {
+      const currentTotal = o.status === 'NEW_ORDER' ? o.estimated_price : (o.final_price || o.estimated_price);
+      const discount = o.discount_applied || 0;
+      const initialPrice = currentTotal + discount;
+
+      return {
+        "Order Number": formatOrderId(o.id),
+        "Order Date": new Date(o.created_at).toLocaleDateString(),
+        "Customer Name": o.customer?.full_name || 'Guest',
+        "Mobile": o.customer?.mobile || 'N/A',
+        "Building": o.customer?.building_name || 'N/A',
+        "Pickup Date": o.pickup_date ? formatSafeDate(o.pickup_date, 'yyyy-MM-dd') : 'N/A',
+        "Pickup Window": o.pickup_time ? getPickupWindow(o.pickup_time) : 'N/A',
+        "Expected Delivery": o.expected_delivery_date ? formatSafeDate(o.expected_delivery_date, 'yyyy-MM-dd') : 'TBD',
+        "Delivery Time": o.expected_delivery_time ? formatTimeTo12h(o.expected_delivery_time) : 'TBD',
+        "Base Amount": initialPrice.toFixed(2), 
+        "Total Discount": discount.toFixed(2), 
+        "Final Amount": currentTotal.toFixed(2),
+        "Status": o.status,
+        "Hanger": o.hanger_needed ? "Yes" : "No",
+        "Remarks": o.notes || ""
+      };
+    });
 
     const itemsDetailData: any[] = [];
     filteredOrders.forEach((o: any) => {
@@ -154,12 +158,11 @@ const matrixOptions = useMemo(() => {
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(summaryData), "Orders Summary");
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(itemsDetailData), "Items Breakdown");
+    
     XLSX.writeFile(wb, `Al_Nejoum_Report_${new Date().toLocaleDateString().replace(/\//g, '-')}.xlsx`);
     toast.success("Excel exported with matched columns!");
   };
 
-  // NEW: State-Based Access Control Rule
-  // We check the original database status to enforce a strict 2-step save process.
   const originalOrder = orders.find((o: any) => o.id === editingOrder?.id);
   const isItemEditingLocked = originalOrder?.status === 'NEW_ORDER';
 
@@ -182,12 +185,17 @@ const matrixOptions = useMemo(() => {
           <div className="flex flex-col md:flex-row gap-3 w-full md:w-auto">
             <div className="relative group flex-1 md:w-80">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-brand-primary transition-colors" size={18} />
-              <input type="text" placeholder="Search ID or Customer..." value={search} onChange={(e) => setSearch(e.target.value)} className="w-full pl-12 pr-4 py-4 bg-white border border-slate-100 rounded-2xl font-bold shadow-sm focus:ring-2 focus:ring-brand-primary outline-none transition-all" />
+              <input 
+                type="text" 
+                placeholder="Search Name, Mobile or Building..." 
+                value={search} 
+                onChange={(e) => setSearch(e.target.value)} 
+                className="w-full pl-12 pr-4 py-4 bg-white border border-slate-100 rounded-2xl font-bold shadow-sm focus:ring-2 focus:ring-brand-primary outline-none transition-all" 
+              />
             </div>
-
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
+            <select 
+              value={statusFilter} 
+              onChange={(e) => setStatusFilter(e.target.value)} 
               className="px-4 py-4 bg-white border border-slate-100 rounded-2xl font-bold text-slate-600 shadow-sm focus:ring-2 focus:ring-brand-primary outline-none transition-all cursor-pointer"
             >
               <option value="ALL">All Statuses</option>
@@ -196,11 +204,15 @@ const matrixOptions = useMemo(() => {
               <option value="DELIVERED">Delivered</option>
               <option value="CANCELLED">Cancelled</option>
             </select>
-            <button onClick={() => setIsReportMode(!isReportMode)} className={cn("px-6 py-4 rounded-2xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 transition-all shadow-sm border", isReportMode ? "bg-brand-primary text-white border-brand-primary" : "bg-white text-slate-600 border-slate-100 hover:bg-slate-50")}>
+            <button 
+              onClick={() => setIsReportMode(!isReportMode)} 
+              className={cn("px-6 py-4 rounded-2xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 transition-all shadow-sm border", isReportMode ? "bg-brand-primary text-white border-brand-primary" : "bg-white text-slate-600 border-slate-100 hover:bg-slate-50")}
+            >
               <BarChart2 size={18} /> {isReportMode ? "Exit Report" : "Analytics"}
             </button>
           </div>
         </div>
+
         {isReportMode && (
           <div className="bg-slate-900 p-6 rounded-[2rem] shadow-xl shadow-slate-200/50 flex flex-col md:flex-row items-end justify-between gap-4">
             <div className="flex flex-col md:flex-row gap-4 w-full md:w-auto">
@@ -213,8 +225,8 @@ const matrixOptions = useMemo(() => {
       </header>
 
       <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
-  <div className="overflow-x-auto">
-    <table className="w-full text-left whitespace-nowrap">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left whitespace-nowrap">
             <thead className="bg-slate-50/50 border-b border-slate-100">
               <tr>
                 <th className="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Order Info</th>
@@ -226,49 +238,65 @@ const matrixOptions = useMemo(() => {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
-              {filteredOrders.map((order: any) => (
-                <tr key={order.id} className="hover:bg-slate-50/50 group">
-                  <td className="p-6 align-top">
-                    <p className="font-black text-slate-900">{formatOrderId(order.id)}</p>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase">{formatSafeDate(order.created_at)}</p>
-                    {order.hanger_needed && (
-                      <span className="inline-block mt-2 text-[9px] font-black text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-100">HANGER REQ</span>
-                    )}
-                    {order.notes && (
-                      <div className="mt-2 flex items-start gap-1.5 text-brand-primary bg-brand-primary/5 p-2 rounded-xl border border-brand-primary/10 max-w-[200px]">
-                        <StickyNote size={12} className="shrink-0 mt-0.5" />
-                        <p className="text-[9px] font-black uppercase tracking-tight leading-tight">{order.notes}</p>
-                      </div>
-                    )}
-                  </td>
-                  <td className="p-6 align-top">
-                    <p className="font-bold text-slate-900">{order.customer?.full_name || 'Guest'}</p>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase">{order.customer?.mobile}</p>
-                  </td>
+              {filteredOrders.map((order: any) => {
+                const currentTotal = order.status === 'NEW_ORDER' ? order.estimated_price : (order.final_price || order.estimated_price);
+                const discountAmount = order.discount_applied || 0;
+                const initialPrice = currentTotal + discountAmount;
 
-                  <td className="p-6 align-top">
-                    <p className="text-sm font-bold text-slate-800">{order.customer?.building_name || 'N/A'}</p>
-                    {order.customer?.flat_number && (
-                      <p className="text-[10px] font-bold text-slate-500 uppercase mt-0.5">Flat {order.customer.flat_number}</p>
-                    )}
-                  </td>
-                  <td className="p-6 align-top">
-                    <div className="flex flex-col gap-1 text-[10px] font-bold text-slate-500">
-                      <p><span className="text-amber-500 uppercase">Pick:</span> {order.pickup_date ? formatSafeDate(order.pickup_date, 'MMM dd') : 'N/A'} @ {order.pickup_time ? getPickupWindow(order.pickup_time) : 'N/A'}</p>
-                      <p><span className="text-emerald-500 uppercase">Drop:</span> {order.expected_delivery_date ? formatSafeDate(order.expected_delivery_date, 'MMM dd') : 'TBD'} {order.expected_delivery_time ? `@ ${formatTimeTo12h(order.expected_delivery_time)}` : ''}</p>
-                    </div>
-                  </td>
-                  <td className="p-6 text-right align-top">
-                    <p className="font-black text-slate-900 text-lg">AED {(order.final_price || order.estimated_price).toFixed(2)}</p>
-                    <StatusBadge status={order.status} />
-                  </td>
-                  <td className="p-6 text-right align-top">
-                    <button onClick={() => setEditingOrder(JSON.parse(JSON.stringify(order)))} className="p-3 bg-slate-50 text-slate-400 hover:bg-brand-primary hover:text-white rounded-xl transition-all shadow-sm">
-                      <Edit3 size={16} />
-                    </button>
-                  </td>
-                </tr>
-              ))}
+                return (
+                  <tr key={order.id} className="hover:bg-slate-50/50 group">
+                    <td className="p-6 align-top">
+                      <p className="font-black text-slate-900">{formatOrderId(order.id)}</p>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase">{formatSafeDate(order.created_at)}</p>
+                      {order.hanger_needed && (
+                        <span className="inline-block mt-2 text-[9px] font-black text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-100">HANGER REQ</span>
+                      )}
+                      {order.notes && (
+                        <div className="mt-2 flex items-start gap-1.5 text-brand-primary bg-brand-primary/5 p-2 rounded-xl border border-brand-primary/10 max-w-[200px]">
+                          <StickyNote size={12} className="shrink-0 mt-0.5" />
+                          <p className="text-[9px] font-black uppercase tracking-tight leading-tight">{order.notes}</p>
+                        </div>
+                      )}
+                    </td>
+                    <td className="p-6 align-top">
+                      <p className="font-bold text-slate-900">{order.customer?.full_name || 'Guest'}</p>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase">{order.customer?.mobile}</p>
+                    </td>
+                    <td className="p-6 align-top">
+                      <p className="text-sm font-bold text-slate-800">{order.customer?.building_name || 'N/A'}</p>
+                      {order.customer?.flat_number && (
+                        <p className="text-[10px] font-bold text-slate-500 uppercase mt-0.5">Flat {order.customer.flat_number}</p>
+                      )}
+                    </td>
+                    <td className="p-6 align-top">
+                      <div className="flex flex-col gap-1 text-[10px] font-bold text-slate-500">
+                        <p><span className="text-amber-500 uppercase">Pick:</span> {order.pickup_date ? formatSafeDate(order.pickup_date, 'MMM dd') : 'N/A'} @ {order.pickup_time ? getPickupWindow(order.pickup_time) : 'N/A'}</p>
+                        <p><span className="text-emerald-500 uppercase">Drop:</span> {order.expected_delivery_date ? formatSafeDate(order.expected_delivery_date, 'MMM dd') : 'TBD'} {order.expected_delivery_time ? `@ ${formatTimeTo12h(order.expected_delivery_time)}` : ''}</p>
+                      </div>
+                    </td>
+                    <td className="p-6 text-right align-top flex flex-col justify-start items-end gap-1.5">
+                      {/* ENHANCED: Professional Price Display */}
+                      {discountAmount > 0 ? (
+                        <div className="flex flex-col items-end w-full">
+                           <div className="flex items-center gap-1.5 mb-0.5">
+                             <span className="text-[8px] font-black uppercase tracking-widest text-slate-400">Orig.</span>
+                             <span className="text-[11px] font-bold text-rose-400/80 line-through decoration-rose-300">AED {initialPrice.toFixed(2)}</span>
+                           </div>
+                           <p className="font-black text-emerald-600 text-[1.1rem] leading-none">AED {currentTotal.toFixed(2)}</p>
+                        </div>
+                      ) : (
+                        <p className="font-black text-slate-900 text-[1.1rem] leading-none mb-0.5">AED {currentTotal.toFixed(2)}</p>
+                      )}
+                      <StatusBadge status={order.status} />
+                    </td>
+                    <td className="p-6 text-right align-top">
+                      <button onClick={() => setEditingOrder(JSON.parse(JSON.stringify(order)))} className="p-3 bg-slate-50 text-slate-400 hover:bg-brand-primary hover:text-white rounded-xl transition-all shadow-sm">
+                        <Edit3 size={16} />
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
@@ -284,7 +312,7 @@ const matrixOptions = useMemo(() => {
               </div>
               <button onClick={() => setEditingOrder(null)} className="p-2 bg-slate-50 rounded-full hover:bg-slate-100 transition-colors"><X size={20} /></button>
             </div>
-            
+
             <div className="p-6 space-y-6">
               {editingOrder.notes && (
                 <div className="bg-amber-50 border border-amber-200 p-5 rounded-[2rem] flex items-start gap-4">
@@ -292,12 +320,15 @@ const matrixOptions = useMemo(() => {
                   <p className="text-sm font-bold text-slate-900 leading-relaxed">{editingOrder.notes}</p>
                 </div>
               )}
-              
+
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <label className="text-[10px] font-black text-slate-400 uppercase">Status</label>
-                  {/* Status remains unlocked so they can change to PICKED_UP */}
-                  <select value={editingOrder.status} onChange={(e) => setEditingOrder({...editingOrder, status: e.target.value})} className="w-full p-3 bg-slate-50 rounded-xl font-bold text-sm border-none focus:ring-2 focus:ring-brand-primary">
+                  <select 
+                    value={editingOrder.status} 
+                    onChange={(e) => setEditingOrder({...editingOrder, status: e.target.value})} 
+                    className="w-full p-3 bg-slate-50 rounded-xl font-bold text-sm border-none focus:ring-2 focus:ring-brand-primary"
+                  >
                     <option value="NEW_ORDER">New Order</option>
                     <option value="PICKED_UP">Picked Up</option>
                     <option value="DELIVERED">Delivered</option>
@@ -306,16 +337,19 @@ const matrixOptions = useMemo(() => {
                 </div>
                 <div className="space-y-1">
                   <label className="text-[10px] font-black text-slate-400 uppercase">Hanger</label>
-                  <select value={editingOrder.hanger_needed ? "true" : "false"} onChange={(e) => setEditingOrder({...editingOrder, hanger_needed: e.target.value === "true"})} className="w-full p-3 bg-slate-50 rounded-xl font-bold text-sm border-none focus:ring-2 focus:ring-brand-primary">
+                  <select 
+                    value={editingOrder.hanger_needed ? "true" : "false"} 
+                    onChange={(e) => setEditingOrder({...editingOrder, hanger_needed: e.target.value === "true"})} 
+                    className="w-full p-3 bg-slate-50 rounded-xl font-bold text-sm border-none focus:ring-2 focus:ring-brand-primary"
+                  >
                     <option value="true">Yes</option><option value="false">No</option>
                   </select>
                 </div>
               </div>
 
-              {/* --- ENHANCED ITEM EDITOR WITH STATE-BASED LOCK --- */}
               <div 
                 className={cn(
-                  "p-5 rounded-[2rem] border space-y-4 transition-all duration-300", 
+                  "p-5 rounded-[2rem] border space-y-4 transition-all duration-300",
                   isItemEditingLocked ? "bg-slate-50/50 border-slate-100 opacity-80" : "bg-slate-50 border-slate-100 shadow-inner"
                 )}
               >
@@ -332,13 +366,11 @@ const matrixOptions = useMemo(() => {
                   <div className="bg-amber-50 border border-amber-200/60 p-4 rounded-2xl flex items-start gap-3 shadow-sm">
                     <AlertCircle size={16} className="text-amber-500 shrink-0 mt-0.5" />
                     <p className="text-xs font-bold text-amber-700 leading-relaxed">
-                      Item modification is locked to prevent customer cart conflicts. 
-                      <br/><strong className="text-amber-900">Please update status to "Picked Up" and Save to unlock.</strong>
+                      Item modification is locked to prevent customer cart conflicts. <br/><strong className="text-amber-900">Please update status to "Picked Up" and Save to unlock.</strong>
                     </p>
                   </div>
                 )}
 
-                {/* We wrap the interactive elements in a div that catches clicks if locked */}
                 <div className="space-y-3" onClickCapture={handleLockedInteraction}>
                   <div className={cn("space-y-3", isItemEditingLocked && "pointer-events-none")}>
                     {editingOrder.items?.map((i: any, index: number) => (
@@ -347,36 +379,38 @@ const matrixOptions = useMemo(() => {
                           <span className="text-xs font-bold text-slate-700 truncate">{i.item?.name}</span>
                           <span className="text-[9px] font-black text-brand-primary uppercase truncate">{i.service_category?.name}</span>
                         </div>
-                        
                         <div className={cn("flex items-center gap-1 bg-slate-50 p-1.5 rounded-xl border border-slate-100 shrink-0", isItemEditingLocked && "opacity-50")}>
                           <div className="flex flex-col px-2">
                             <label className="text-[8px] font-black uppercase text-slate-400 text-center">Price</label>
                             <input 
-                              type="number" min="0" step="0.5" 
+                              type="number" 
+                              min="0" 
+                              step="0.5" 
                               value={i.unit_price !== undefined ? i.unit_price : 0} 
                               onChange={(e) => {
                                 const newItems = [...editingOrder.items];
                                 newItems[index] = { ...newItems[index], unit_price: parseFloat(e.target.value) || 0 };
                                 setEditingOrder({...editingOrder, items: newItems});
-                              }} 
+                              }}
                               disabled={isItemEditingLocked}
-                              className="w-14 bg-transparent text-xs font-black text-slate-900 focus:outline-none text-center disabled:cursor-not-allowed" 
+                              className="w-14 bg-transparent text-xs font-black text-slate-900 focus:outline-none text-center disabled:cursor-not-allowed"
                             />
                           </div>
                           <div className="w-px h-6 bg-slate-200"></div>
                           <div className="flex flex-col px-2">
                             <label className="text-[8px] font-black uppercase text-slate-400 text-center">Qty</label>
                             <input 
-                              type="number" min="0" 
+                              type="number" 
+                              min="0" 
                               value={i.final_quantity > 0 ? i.final_quantity : (i.estimated_quantity || 0)} 
                               onChange={(e) => {
                                 const newItems = [...editingOrder.items];
                                 const qty = parseInt(e.target.value) || 0;
                                 newItems[index] = { ...newItems[index], final_quantity: qty, estimated_quantity: qty };
                                 setEditingOrder({...editingOrder, items: newItems});
-                              }} 
+                              }}
                               disabled={isItemEditingLocked}
-                              className="w-10 bg-transparent text-xs font-black text-slate-900 focus:outline-none text-center disabled:cursor-not-allowed" 
+                              className="w-10 bg-transparent text-xs font-black text-slate-900 focus:outline-none text-center disabled:cursor-not-allowed"
                             />
                           </div>
                           <button 
@@ -392,10 +426,10 @@ const matrixOptions = useMemo(() => {
                         </div>
                       </div>
                     ))}
-
+                    
                     <select 
                       disabled={isItemEditingLocked}
-                      className="w-full p-4 rounded-xl border-2 border-dashed border-slate-200 bg-white text-xs font-bold text-slate-500 outline-none hover:border-brand-primary transition-colors cursor-pointer appearance-none disabled:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50" 
+                      className="w-full p-4 rounded-xl border-2 border-dashed border-slate-200 bg-white text-xs font-bold text-slate-500 outline-none hover:border-brand-primary transition-colors cursor-pointer appearance-none disabled:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
                       value="" 
                       onChange={(e) => {
                         const [itemId, catId] = e.target.value.split('_').map(Number);
@@ -405,19 +439,18 @@ const matrixOptions = useMemo(() => {
                         const match = matrixOptions.find(o => o.item_id === itemId && o.service_category_id === catId);
                         const newItem = { 
                           item_id: itemId, service_category_id: catId, 
-                          final_quantity: 1, estimated_quantity: 1, 
-                          unit_price: match?.price,
+                          final_quantity: 1, estimated_quantity: 1, unit_price: match?.price,
                           item: { name: match?.item_name }, service_category: { name: match?.service_name }
                         };
                         setEditingOrder({ ...editingOrder, items: [...editingOrder.items, newItem] });
                       }}
                     >
                       <option value="" disabled>+ Add custom service...</option>
-                     {matrixOptions.map((opt: any) => (
-  <option key={`${opt.item_id}_${opt.service_category_id}`} value={`${opt.item_id}_${opt.service_category_id}`}>
-    {opt.item_name} - {opt.service_name} (AED {opt.price.toFixed(2)}{opt.is_discounted ? ' • PROMO' : ''})
-  </option>
-))}
+                      {matrixOptions.map((opt: any) => (
+                        <option key={`${opt.item_id}_${opt.service_category_id}`} value={`${opt.item_id}_${opt.service_category_id}`}>
+                          {opt.item_name} - {opt.service_name} (AED {opt.price.toFixed(2)}{opt.is_discounted ? ' • PROMO' : ''})
+                        </option>
+                      ))}
                     </select>
                   </div>
                 </div>
@@ -441,24 +474,24 @@ const matrixOptions = useMemo(() => {
               </div>
 
               {/* SUBMIT BUTTON */}
-              <button onClick={() => updateMutation.mutate({ 
-                  id: editingOrder.id, 
-                  data: { 
-                    ...editingOrder, 
-                    items: editingOrder.items.map((i: any) => ({ 
-                      item_id: i.item_id, 
-                      service_category_id: i.service_category_id, 
+              <button 
+                onClick={() => updateMutation.mutate({
+                  id: editingOrder.id,
+                  data: {
+                    ...editingOrder,
+                    items: editingOrder.items.map((i: any) => ({
+                      item_id: i.item_id,
+                      service_category_id: i.service_category_id,
                       final_quantity: i.final_quantity > 0 ? i.final_quantity : (i.estimated_quantity || 0),
-                      unit_price: i.unit_price 
-                    })) 
-                  } 
-                })} 
-                disabled={updateMutation.isPending} 
+                      unit_price: i.unit_price
+                    }))
+                  }
+                })}
+                disabled={updateMutation.isPending}
                 className="w-full py-5 bg-slate-900 text-white rounded-[1.5rem] font-black uppercase tracking-widest text-xs shadow-xl flex items-center justify-center gap-2 active:scale-[0.98] transition-all disabled:opacity-70"
               >
                 {updateMutation.isPending ? <Loader2 className="animate-spin" size={18}/> : "Save All Changes & Recalculate"}
               </button>
-
             </div>
           </div>
         </div>
@@ -484,7 +517,7 @@ const getPickupWindow = (timeStr?: string) => {
     const endTime = formatAMPM(endHour, min);
     return `${startTime} - ${endTime}`;
   } catch (e) {
-    return timeStr; 
+    return timeStr;
   }
 };
 

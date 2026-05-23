@@ -1,22 +1,23 @@
+// src/features/staff/pages/PickupQueue.tsx
 import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/api/axios';
 import { CardSkeleton } from '@/components/ui/Skeleton';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { toast } from 'sonner';
-import { Plus, Minus, Calendar, AlertCircle, PlusCircle, Clock, MapPin, Loader2 } from 'lucide-react';
+import { Plus, Minus, Calendar, AlertCircle, PlusCircle, Clock, MapPin, Loader2, Search, FilterX } from 'lucide-react';
 import { getPickupStatus, formatTimeTo12h } from '@/utils/formatters';
 
 export const PickupQueue = () => {
   const queryClient = useQueryClient();
   const [verifyingOrderId, setVerifyingOrderId] = useState<number | null>(null);
-  
-  // NEW: quantities now use composite key "itemId_categoryId"
   const [quantities, setQuantities] = useState<Record<string, number>>({});
   const [showItemPicker, setShowItemPicker] = useState(false);
-  
   const [deliveryDate, setDeliveryDate] = useState('');
   const [deliveryTime, setDeliveryTime] = useState('');
+
+  const [searchQuery, setSearchQuery] = useState('');
+  const [dateFilter, setDateFilter] = useState('');
 
   const { data: orders, isLoading } = useQuery({
     queryKey: ['pickups'],
@@ -32,7 +33,6 @@ export const PickupQueue = () => {
     enabled: verifyingOrderId !== null
   });
 
-  // FLATTEN MASTER ITEMS FOR DROPDOWN
   const matrixOptions = useMemo(() => {
     if (!masterItems) return [];
     const options: any[] = [];
@@ -50,8 +50,36 @@ export const PickupQueue = () => {
     return options;
   }, [masterItems]);
 
+  const filteredOrders = useMemo(() => {
+    if (!orders) return [];
+    return orders.filter((order: any) => {
+      const query = searchQuery.toLowerCase().trim();
+      const matchesSearch = query === '' || 
+        order.id.toString().includes(query) ||
+        (order.customer?.full_name || '').toLowerCase().includes(query) ||
+        (order.customer?.mobile || '').includes(query) ||
+        (order.customer?.building_name || '').toLowerCase().includes(query);
+
+      let matchesDate = true;
+      if (dateFilter) {
+        if (!order.pickup_date) {
+          matchesDate = false;
+        } else {
+          const orderDate = new Date(order.pickup_date);
+          const localYear = orderDate.getFullYear();
+          const localMonth = String(orderDate.getMonth() + 1).padStart(2, '0');
+          const localDay = String(orderDate.getDate()).padStart(2, '0');
+          
+          const localDateStr = `${localYear}-${localMonth}-${localDay}`;
+          matchesDate = localDateStr === dateFilter;
+        }
+      }
+      return matchesSearch && matchesDate;
+    });
+  }, [orders, searchQuery, dateFilter]);
+
   const pickupMutation = useMutation({
-    mutationFn: (payload: any) => api.post(`/operations/${payload.id}/pickup`, { 
+    mutationFn: (payload: any) => api.post(`/operations/${payload.id}/pickup`, {
       items: payload.items,
       expected_delivery_date: deliveryDate,
       expected_delivery_time: deliveryTime
@@ -88,177 +116,452 @@ export const PickupQueue = () => {
     </div>
   );
 
-  if (!orders || orders.length === 0) return (
-    <div className="max-w-md mx-auto pt-20">
-      <EmptyState title="Queue Empty" message="No pickups assigned to you." />
-    </div>
-  );
-
   return (
     <div className="max-w-md mx-auto p-4 space-y-6 pb-24">
-      <h1 className="text-2xl font-black text-slate-900 tracking-tight">Pickup Queue</h1>
+      <div className="flex items-end justify-between mb-2">
+        <h1 className="text-2xl font-black text-slate-900 tracking-tight">Pickup Queue</h1>
+        <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 bg-slate-100 px-3 py-1.5 rounded-full">
+          {filteredOrders.length} Pending
+        </span>
+      </div>
 
-      {orders?.map((order: any) => {
-        const dateInfo = getPickupStatus(order.pickup_date);
-        const isVerifying = verifyingOrderId === order.id;
-        
-        return (
-          <div key={order.id} className={`bg-white rounded-[2.5rem] border ${isVerifying ? 'border-brand-primary shadow-xl ring-4 ring-brand-primary/5' : 'border-slate-100 shadow-sm'} transition-all duration-300 overflow-hidden`}>
-            <div className="p-6">
-              
-              <div className="flex justify-between items-center mb-4">
-                <span className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${dateInfo.color}`}>
-                  {dateInfo.label === "Overdue" ? <AlertCircle size={12}/> : <Calendar size={12}/>}
-                  {dateInfo.label}
-                </span>
-                <p className="font-black text-slate-300 text-[10px] uppercase tracking-widest"># {order.id}</p>
-              </div>
+      {/* ENHANCED: Stacked Mobile Sticky Filter Bar */}
+      <div className="sticky top-2 z-10 space-y-3 bg-white/90 backdrop-blur-xl p-4 rounded-3xl border border-slate-100 shadow-sm">
+        <div className="relative group">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-brand-primary transition-colors" size={18} />
+          <input 
+            type="text" 
+            placeholder="Search ID, Name, or Building..." 
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl text-xs font-bold focus:ring-2 focus:ring-brand-primary outline-none transition-all placeholder:font-medium placeholder:text-slate-400"
+          />
+        </div>
+        <div className="flex gap-2">
+          <div className="relative flex-1">
+            <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
+            <input 
+              type="date" 
+              value={dateFilter}
+              onChange={(e) => setDateFilter(e.target.value)}
+              className="w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl text-[11px] font-black uppercase tracking-widest focus:ring-2 focus:ring-brand-primary outline-none transition-all color-scheme-light"
+            />
+          </div>
+          {(searchQuery || dateFilter) && (
+            <button 
+              onClick={() => { setSearchQuery(''); setDateFilter(''); }}
+              className="px-4 py-3.5 bg-red-50 text-red-500 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-red-100 transition-colors flex items-center justify-center gap-1.5 shrink-0 border border-red-100"
+              title="Clear Filters"
+            >
+              <FilterX size={14} /> Clear
+            </button>
+          )}
+        </div>
+      </div>
 
-              <div className="flex gap-4 mb-6 px-1">
-                <div className="flex items-center gap-1.5 text-slate-500 font-bold text-[11px] uppercase tracking-wide">
-                  <Calendar size={14} className="text-brand-primary" />
-                  {new Date(order.pickup_date).toLocaleDateString()}
-                </div>
-                <div className="flex items-center gap-1.5 text-slate-500 font-bold text-[11px] uppercase tracking-wide">
-                  <Clock size={14} className="text-brand-primary" />
-                  {formatTimeTo12h(order.pickup_time)}
-                </div>
-              </div>
+      {filteredOrders.length === 0 ? (
+        <div className="pt-10">
+          <EmptyState title="Queue Empty" message="No pickups assigned to you for these filters." />
+        </div>
+      ) : (
+        <div className="space-y-6">
+          {filteredOrders.map((order: any) => {
+            const dateInfo = getPickupStatus(order.pickup_date);
+            const isVerifying = verifyingOrderId === order.id;
 
-              <div className="flex items-start gap-3 mb-6">
-                <div className="p-3 bg-slate-50 rounded-2xl text-slate-400"><MapPin size={20} /></div>
-                <div>
-                  <p className="font-black text-slate-900 leading-none mb-1">{order.customer?.full_name}</p>
-                  <p className="text-xs font-bold text-slate-500 italic">
-                    {order.customer?.building_name}, {order.customer?.flat_number}
-                  </p>
-                </div>
-              </div>
-
-              {isVerifying ? (
-                <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Verify Items</p>
-                  <div className="bg-slate-50 p-4 rounded-3xl border border-slate-100 space-y-3">
-                    {Object.entries(quantities).map(([compositeKey, qty]) => {
-                      const opt = matrixOptions.find(o => o.compositeKey === compositeKey);
-                      // Fallback just in case it was a legacy/deleted item
-                      const itemName = opt?.item_name || "Unknown Item";
-                      const catName = opt?.service_name || "Unknown Service";
-
-                      return (
-                        <div key={compositeKey} className="flex justify-between items-center bg-white p-3 rounded-2xl border border-slate-100">
-                          <div className="flex flex-col">
-                            <span className="text-xs font-black text-slate-700">{itemName}</span>
-                            <span className="text-[9px] font-bold text-brand-primary uppercase">{catName}</span>
-                          </div>
-                          <div className="flex items-center gap-3 bg-slate-50 px-2 py-1 rounded-xl border">
-                            <button 
-                              className="p-1 hover:text-brand-primary transition-colors"
-                              onClick={() => setQuantities(p => ({...p, [compositeKey]: Math.max(0, p[compositeKey] - 1)}))}
-                            >
-                              <Minus size={14}/>
-                            </button>
-                            <span className="w-4 text-center font-black text-xs">{qty}</span>
-                            <button 
-                              className="p-1 hover:text-brand-primary transition-colors"
-                              onClick={() => setQuantities(p => ({...p, [compositeKey]: p[compositeKey] + 1}))}
-                            >
-                              <Plus size={14}/>
-                            </button>
-                          </div>
-                        </div>
-                      );
-                    })}
-
-                    {showItemPicker ? (
-                      <select 
-                        className="w-full p-3 rounded-xl border-2 border-brand-primary/20 bg-white text-xs font-bold outline-none"
-                        onChange={(e) => addItemToOrder(e.target.value)}
-                        defaultValue=""
-                      >
-                        <option value="" disabled>Select service to add...</option>
-                        {matrixOptions.map((opt: any) => (
-                          <option key={opt.compositeKey} value={opt.compositeKey}>
-                            {opt.item_name} - {opt.service_name}
-                          </option>
-                        ))}
-                      </select>
-                    ) : (
-                      <button 
-                        onClick={() => setShowItemPicker(true)}
-                        className="w-full flex items-center justify-center gap-2 text-brand-primary font-black text-[10px] uppercase tracking-widest py-2 border-2 border-dashed border-brand-primary/10 rounded-xl hover:bg-brand-primary/5"
-                      >
-                        <PlusCircle size={14} /> Add missing item
-                      </button>
-                    )}
+            return (
+              <div key={order.id} className={`bg-white rounded-[2.5rem] border ${isVerifying ? 'border-brand-primary shadow-xl ring-4 ring-brand-primary/5' : 'border-slate-100 shadow-sm'} transition-all duration-300 overflow-hidden`}>
+                <div className="p-6">
+                  <div className="flex justify-between items-center mb-4">
+                    <span className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${dateInfo.color}`}>
+                      {dateInfo.label === "Overdue" ? <AlertCircle size={12}/> : <Calendar size={12}/>}
+                      {dateInfo.label}
+                    </span>
+                    <p className="font-black text-slate-300 text-[10px] uppercase tracking-widest"># {order.id}</p>
                   </div>
 
-                  {order.hanger_needed && (
-                 <div className="bg-indigo-50 border border-indigo-100 p-2 rounded-xl flex items-center gap-2 mt-2 w-max">
-                   <div className="h-6 w-6 bg-indigo-100 text-indigo-500 rounded-lg flex items-center justify-center">
-                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 4v11"/><path d="M12 4a3 3 0 0 1 3-3"/><path d="M12 4a3 3 0 0 0-3-3"/><path d="M5 15h14l-7 7-7-7Z"/></svg>
-                   </div>
-                   <span className="text-[10px] font-black uppercase tracking-widest text-indigo-700">Provide Hangers</span>
-                 </div>
-              )}
-
-                  <div className="space-y-3 pt-2">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Expected Delivery</p>
-                    <div className="grid grid-cols-2 gap-3">
-                      <input 
-                        type="date"
-                        required
-                        value={deliveryDate}
-                        onChange={(e) => setDeliveryDate(e.target.value)}
-                        className="w-full p-4 bg-slate-50 rounded-2xl font-bold text-xs outline-none border border-slate-100"
-                      />
-                      <input 
-                        type="time"
-                        required
-                        value={deliveryTime}
-                        onChange={(e) => setDeliveryTime(e.target.value)}
-                        className="w-full p-4 bg-slate-50 rounded-2xl font-bold text-xs outline-none border border-slate-100"
-                      />
+                  <div className="flex gap-4 mb-6 px-1">
+                    <div className="flex items-center gap-1.5 text-slate-500 font-bold text-[11px] uppercase tracking-wide">
+                      <Calendar size={14} className="text-brand-primary" />
+                      {new Date(order.pickup_date).toLocaleDateString()}
+                    </div>
+                    <div className="flex items-center gap-1.5 text-slate-500 font-bold text-[11px] uppercase tracking-wide">
+                      <Clock size={14} className="text-brand-primary" />
+                      {formatTimeTo12h(order.pickup_time)}
                     </div>
                   </div>
 
-                  <button 
-                    onClick={() => {
-                      if (!deliveryDate || !deliveryTime) return toast.error("Please select expected delivery date and time");
-                      
-                      // Format payload to split composite keys back into IDs
-                      const formattedItems = Object.entries(quantities).map(([k, v]) => {
-                        const [itemId, catId] = k.split('_');
-                        return { 
-                          item_id: parseInt(itemId), 
-                          service_category_id: parseInt(catId), 
-                          final_quantity: v 
-                        };
-                      });
+                  <div className="flex items-start gap-3 mb-6">
+                    <div className="p-3 bg-slate-50 rounded-2xl text-slate-400"><MapPin size={20} /></div>
+                    <div>
+                      <p className="font-black text-slate-900 leading-none mb-1">{order.customer?.full_name}</p>
+                      <p className="text-xs font-bold text-slate-500 italic">
+                        {order.customer?.building_name}, {order.customer?.flat_number}
+                      </p>
+                    </div>
+                  </div>
 
-                      pickupMutation.mutate({ id: order.id, items: formattedItems });
-                    }}
-                    disabled={pickupMutation.isPending}
-                    className="w-full py-4 bg-slate-900 text-white rounded-[1.5rem] font-black uppercase tracking-widest text-[10px] shadow-lg flex items-center justify-center gap-2 mt-4"
-                  >
-                    {pickupMutation.isPending ? <Loader2 className="animate-spin" size={16}/> : "Confirm Pickup & Lock Order"}
-                  </button>
+                  {isVerifying ? (
+                    <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2">
+                      <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Verify Items</p>
+                      <div className="bg-slate-50 p-4 rounded-3xl border border-slate-100 space-y-3">
+                        {Object.entries(quantities).map(([compositeKey, qty]) => {
+                          const opt = matrixOptions.find(o => o.compositeKey === compositeKey);
+                          const itemName = opt?.item_name || "Unknown Item";
+                          const catName = opt?.service_name || "Unknown Service";
+                          
+                          return (
+                            <div key={compositeKey} className="flex justify-between items-center bg-white p-3 rounded-2xl border border-slate-100">
+                              <div className="flex flex-col">
+                                <span className="text-xs font-black text-slate-700">{itemName}</span>
+                                <span className="text-[9px] font-bold text-brand-primary uppercase">{catName}</span>
+                              </div>
+                              <div className="flex items-center gap-3 bg-slate-50 px-2 py-1 rounded-xl border">
+                                <button className="p-1 hover:text-brand-primary transition-colors" onClick={() => setQuantities(p => ({...p, [compositeKey]: Math.max(0, p[compositeKey] - 1)}))}>
+                                  <Minus size={14}/>
+                                </button>
+                                <span className="w-4 text-center font-black text-xs">{qty}</span>
+                                <button className="p-1 hover:text-brand-primary transition-colors" onClick={() => setQuantities(p => ({...p, [compositeKey]: p[compositeKey] + 1}))}>
+                                  <Plus size={14}/>
+                                </button>
+                              </div>
+                            </div>
+                          );
+                        })}
+
+                        {showItemPicker ? (
+                          <select 
+                            className="w-full p-3 rounded-xl border-2 border-brand-primary/20 bg-white text-xs font-bold outline-none"
+                            onChange={(e) => addItemToOrder(e.target.value)}
+                            defaultValue=""
+                          >
+                            <option value="" disabled>Select service to add...</option>
+                            {matrixOptions.map((opt: any) => (
+                              <option key={opt.compositeKey} value={opt.compositeKey}>
+                                {opt.item_name} - {opt.service_name}
+                              </option>
+                            ))}
+                          </select>
+                        ) : (
+                          <button 
+                            onClick={() => setShowItemPicker(true)}
+                            className="w-full flex items-center justify-center gap-2 text-brand-primary font-black text-[10px] uppercase tracking-widest py-2 border-2 border-dashed border-brand-primary/10 rounded-xl hover:bg-brand-primary/5"
+                          >
+                            <PlusCircle size={14} /> Add missing item
+                          </button>
+                        )}
+                      </div>
+
+                      {order.hanger_needed && (
+                        <div className="bg-indigo-50 border border-indigo-100 p-2 rounded-xl flex items-center gap-2 mt-2 w-max">
+                          <div className="h-6 w-6 bg-indigo-100 text-indigo-500 rounded-lg flex items-center justify-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 4v11"/><path d="M12 4a3 3 0 0 1 3-3"/><path d="M12 4a3 3 0 0 0-3-3"/><path d="M5 15h14l-7 7-7-7Z"/></svg>
+                          </div>
+                          <span className="text-[10px] font-black uppercase tracking-widest text-indigo-700">Provide Hangers</span>
+                        </div>
+                      )}
+
+                      <div className="space-y-3 pt-2">
+                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Expected Delivery</p>
+                        <div className="grid grid-cols-2 gap-3">
+                          <input type="date" required value={deliveryDate} onChange={(e) => setDeliveryDate(e.target.value)} className="w-full p-4 bg-slate-50 rounded-2xl font-bold text-xs outline-none border border-slate-100" />
+                          <input type="time" required value={deliveryTime} onChange={(e) => setDeliveryTime(e.target.value)} className="w-full p-4 bg-slate-50 rounded-2xl font-bold text-xs outline-none border border-slate-100" />
+                        </div>
+                      </div>
+
+                      <button 
+                        onClick={() => {
+                          if (!deliveryDate || !deliveryTime) return toast.error("Please select expected delivery date and time");
+                          const formattedItems = Object.entries(quantities).map(([k, v]) => {
+                            const [itemId, catId] = k.split('_');
+                            return { item_id: parseInt(itemId), service_category_id: parseInt(catId), final_quantity: v };
+                          });
+                          pickupMutation.mutate({ id: order.id, items: formattedItems });
+                        }}
+                        disabled={pickupMutation.isPending}
+                        className="w-full py-4 bg-slate-900 text-white rounded-[1.5rem] font-black uppercase tracking-widest text-[10px] shadow-lg flex items-center justify-center gap-2 mt-4"
+                      >
+                        {pickupMutation.isPending ? <Loader2 className="animate-spin" size={16}/> : "Confirm Pickup & Lock Order"}
+                      </button>
+                    </div>
+                  ) : (
+                    <button 
+                      onClick={() => startVerification(order)}
+                      className="w-full py-4 bg-slate-900 text-white rounded-[1.5rem] font-black uppercase tracking-widest text-[10px] hover:bg-brand-primary transition-all shadow-xl shadow-slate-200"
+                    >
+                      Arrived at Customer
+                    </button>
+                  )}
                 </div>
-              ) : (
-                <button 
-                  onClick={() => startVerification(order)} 
-                  className="w-full py-4 bg-slate-900 text-white rounded-[1.5rem] font-black uppercase tracking-widest text-[10px] hover:bg-brand-primary transition-all shadow-xl shadow-slate-200"
-                >
-                  Arrived at Customer
-                </button>
-              )}
-            </div>
-          </div>
-        );
-      })}
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 };
+// import { useState, useMemo } from 'react';
+// import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+// import api from '@/api/axios';
+// import { CardSkeleton } from '@/components/ui/Skeleton';
+// import { EmptyState } from '@/components/ui/EmptyState';
+// import { toast } from 'sonner';
+// import { Plus, Minus, Calendar, AlertCircle, PlusCircle, Clock, MapPin, Loader2 } from 'lucide-react';
+// import { getPickupStatus, formatTimeTo12h } from '@/utils/formatters';
+
+// export const PickupQueue = () => {
+//   const queryClient = useQueryClient();
+//   const [verifyingOrderId, setVerifyingOrderId] = useState<number | null>(null);
+  
+//   // NEW: quantities now use composite key "itemId_categoryId"
+//   const [quantities, setQuantities] = useState<Record<string, number>>({});
+//   const [showItemPicker, setShowItemPicker] = useState(false);
+  
+//   const [deliveryDate, setDeliveryDate] = useState('');
+//   const [deliveryTime, setDeliveryTime] = useState('');
+
+//   const { data: orders, isLoading } = useQuery({
+//     queryKey: ['pickups'],
+//     queryFn: async () => (await api.get('/operations/pickup-queue')).data,
+//     refetchInterval: 10000,
+//     refetchOnWindowFocus: true,
+//     staleTime: 5000,
+//   });
+
+//   const { data: masterItems } = useQuery({
+//     queryKey: ['laundry-items'],
+//     queryFn: async () => (await api.get('/items')).data,
+//     enabled: verifyingOrderId !== null
+//   });
+
+//   // FLATTEN MASTER ITEMS FOR DROPDOWN
+//   const matrixOptions = useMemo(() => {
+//     if (!masterItems) return [];
+//     const options: any[] = [];
+//     masterItems.forEach((item: any) => {
+//       item.services?.forEach((svc: any) => {
+//         options.push({
+//           compositeKey: `${item.id}_${svc.service_category_id}`,
+//           item_id: item.id,
+//           item_name: item.name,
+//           service_category_id: svc.service_category_id,
+//           service_name: svc.category?.name || "Service",
+//         });
+//       });
+//     });
+//     return options;
+//   }, [masterItems]);
+
+//   const pickupMutation = useMutation({
+//     mutationFn: (payload: any) => api.post(`/operations/${payload.id}/pickup`, { 
+//       items: payload.items,
+//       expected_delivery_date: deliveryDate,
+//       expected_delivery_time: deliveryTime
+//     }),
+//     onSuccess: () => {
+//       queryClient.invalidateQueries({ queryKey: ['pickups'] });
+//       setVerifyingOrderId(null);
+//       setDeliveryDate('');
+//       setDeliveryTime('');
+//       toast.success("Pickup confirmed!");
+//     },
+//     onError: (err: any) => toast.error(err.response?.data?.detail || "Failed to confirm pickup")
+//   });
+
+//   const startVerification = (order: any) => {
+//     const initial: Record<string, number> = {};
+//     order.items.forEach((i: any) => {
+//       const key = `${i.item_id}_${i.service_category_id}`;
+//       initial[key] = i.final_quantity || i.estimated_quantity || 0;
+//     });
+//     setQuantities(initial);
+//     setVerifyingOrderId(order.id);
+//   };
+
+//   const addItemToOrder = (compositeKey: string) => {
+//     setQuantities(prev => ({ ...prev, [compositeKey]: (prev[compositeKey] || 0) + 1 }));
+//     setShowItemPicker(false);
+//   };
+
+//   if (isLoading) return (
+//     <div className="max-w-md mx-auto p-4 space-y-4">
+//       <div className="h-8 w-32 bg-slate-100 animate-pulse rounded-lg mb-4" />
+//       {[1, 2, 3].map(i => <CardSkeleton key={i} />)}
+//     </div>
+//   );
+
+//   if (!orders || orders.length === 0) return (
+//     <div className="max-w-md mx-auto pt-20">
+//       <EmptyState title="Queue Empty" message="No pickups assigned to you." />
+//     </div>
+//   );
+
+//   return (
+//     <div className="max-w-md mx-auto p-4 space-y-6 pb-24">
+//       <h1 className="text-2xl font-black text-slate-900 tracking-tight">Pickup Queue</h1>
+
+//       {orders?.map((order: any) => {
+//         const dateInfo = getPickupStatus(order.pickup_date);
+//         const isVerifying = verifyingOrderId === order.id;
+        
+//         return (
+//           <div key={order.id} className={`bg-white rounded-[2.5rem] border ${isVerifying ? 'border-brand-primary shadow-xl ring-4 ring-brand-primary/5' : 'border-slate-100 shadow-sm'} transition-all duration-300 overflow-hidden`}>
+//             <div className="p-6">
+              
+//               <div className="flex justify-between items-center mb-4">
+//                 <span className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${dateInfo.color}`}>
+//                   {dateInfo.label === "Overdue" ? <AlertCircle size={12}/> : <Calendar size={12}/>}
+//                   {dateInfo.label}
+//                 </span>
+//                 <p className="font-black text-slate-300 text-[10px] uppercase tracking-widest"># {order.id}</p>
+//               </div>
+
+//               <div className="flex gap-4 mb-6 px-1">
+//                 <div className="flex items-center gap-1.5 text-slate-500 font-bold text-[11px] uppercase tracking-wide">
+//                   <Calendar size={14} className="text-brand-primary" />
+//                   {new Date(order.pickup_date).toLocaleDateString()}
+//                 </div>
+//                 <div className="flex items-center gap-1.5 text-slate-500 font-bold text-[11px] uppercase tracking-wide">
+//                   <Clock size={14} className="text-brand-primary" />
+//                   {formatTimeTo12h(order.pickup_time)}
+//                 </div>
+//               </div>
+
+//               <div className="flex items-start gap-3 mb-6">
+//                 <div className="p-3 bg-slate-50 rounded-2xl text-slate-400"><MapPin size={20} /></div>
+//                 <div>
+//                   <p className="font-black text-slate-900 leading-none mb-1">{order.customer?.full_name}</p>
+//                   <p className="text-xs font-bold text-slate-500 italic">
+//                     {order.customer?.building_name}, {order.customer?.flat_number}
+//                   </p>
+//                 </div>
+//               </div>
+
+//               {isVerifying ? (
+//                 <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2">
+//                   <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Verify Items</p>
+//                   <div className="bg-slate-50 p-4 rounded-3xl border border-slate-100 space-y-3">
+//                     {Object.entries(quantities).map(([compositeKey, qty]) => {
+//                       const opt = matrixOptions.find(o => o.compositeKey === compositeKey);
+//                       // Fallback just in case it was a legacy/deleted item
+//                       const itemName = opt?.item_name || "Unknown Item";
+//                       const catName = opt?.service_name || "Unknown Service";
+
+//                       return (
+//                         <div key={compositeKey} className="flex justify-between items-center bg-white p-3 rounded-2xl border border-slate-100">
+//                           <div className="flex flex-col">
+//                             <span className="text-xs font-black text-slate-700">{itemName}</span>
+//                             <span className="text-[9px] font-bold text-brand-primary uppercase">{catName}</span>
+//                           </div>
+//                           <div className="flex items-center gap-3 bg-slate-50 px-2 py-1 rounded-xl border">
+//                             <button 
+//                               className="p-1 hover:text-brand-primary transition-colors"
+//                               onClick={() => setQuantities(p => ({...p, [compositeKey]: Math.max(0, p[compositeKey] - 1)}))}
+//                             >
+//                               <Minus size={14}/>
+//                             </button>
+//                             <span className="w-4 text-center font-black text-xs">{qty}</span>
+//                             <button 
+//                               className="p-1 hover:text-brand-primary transition-colors"
+//                               onClick={() => setQuantities(p => ({...p, [compositeKey]: p[compositeKey] + 1}))}
+//                             >
+//                               <Plus size={14}/>
+//                             </button>
+//                           </div>
+//                         </div>
+//                       );
+//                     })}
+
+//                     {showItemPicker ? (
+//                       <select 
+//                         className="w-full p-3 rounded-xl border-2 border-brand-primary/20 bg-white text-xs font-bold outline-none"
+//                         onChange={(e) => addItemToOrder(e.target.value)}
+//                         defaultValue=""
+//                       >
+//                         <option value="" disabled>Select service to add...</option>
+//                         {matrixOptions.map((opt: any) => (
+//                           <option key={opt.compositeKey} value={opt.compositeKey}>
+//                             {opt.item_name} - {opt.service_name}
+//                           </option>
+//                         ))}
+//                       </select>
+//                     ) : (
+//                       <button 
+//                         onClick={() => setShowItemPicker(true)}
+//                         className="w-full flex items-center justify-center gap-2 text-brand-primary font-black text-[10px] uppercase tracking-widest py-2 border-2 border-dashed border-brand-primary/10 rounded-xl hover:bg-brand-primary/5"
+//                       >
+//                         <PlusCircle size={14} /> Add missing item
+//                       </button>
+//                     )}
+//                   </div>
+
+//                   {order.hanger_needed && (
+//                  <div className="bg-indigo-50 border border-indigo-100 p-2 rounded-xl flex items-center gap-2 mt-2 w-max">
+//                    <div className="h-6 w-6 bg-indigo-100 text-indigo-500 rounded-lg flex items-center justify-center">
+//                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 4v11"/><path d="M12 4a3 3 0 0 1 3-3"/><path d="M12 4a3 3 0 0 0-3-3"/><path d="M5 15h14l-7 7-7-7Z"/></svg>
+//                    </div>
+//                    <span className="text-[10px] font-black uppercase tracking-widest text-indigo-700">Provide Hangers</span>
+//                  </div>
+//               )}
+
+//                   <div className="space-y-3 pt-2">
+//                     <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Expected Delivery</p>
+//                     <div className="grid grid-cols-2 gap-3">
+//                       <input 
+//                         type="date"
+//                         required
+//                         value={deliveryDate}
+//                         onChange={(e) => setDeliveryDate(e.target.value)}
+//                         className="w-full p-4 bg-slate-50 rounded-2xl font-bold text-xs outline-none border border-slate-100"
+//                       />
+//                       <input 
+//                         type="time"
+//                         required
+//                         value={deliveryTime}
+//                         onChange={(e) => setDeliveryTime(e.target.value)}
+//                         className="w-full p-4 bg-slate-50 rounded-2xl font-bold text-xs outline-none border border-slate-100"
+//                       />
+//                     </div>
+//                   </div>
+
+//                   <button 
+//                     onClick={() => {
+//                       if (!deliveryDate || !deliveryTime) return toast.error("Please select expected delivery date and time");
+                      
+//                       // Format payload to split composite keys back into IDs
+//                       const formattedItems = Object.entries(quantities).map(([k, v]) => {
+//                         const [itemId, catId] = k.split('_');
+//                         return { 
+//                           item_id: parseInt(itemId), 
+//                           service_category_id: parseInt(catId), 
+//                           final_quantity: v 
+//                         };
+//                       });
+
+//                       pickupMutation.mutate({ id: order.id, items: formattedItems });
+//                     }}
+//                     disabled={pickupMutation.isPending}
+//                     className="w-full py-4 bg-slate-900 text-white rounded-[1.5rem] font-black uppercase tracking-widest text-[10px] shadow-lg flex items-center justify-center gap-2 mt-4"
+//                   >
+//                     {pickupMutation.isPending ? <Loader2 className="animate-spin" size={16}/> : "Confirm Pickup & Lock Order"}
+//                   </button>
+//                 </div>
+//               ) : (
+//                 <button 
+//                   onClick={() => startVerification(order)} 
+//                   className="w-full py-4 bg-slate-900 text-white rounded-[1.5rem] font-black uppercase tracking-widest text-[10px] hover:bg-brand-primary transition-all shadow-xl shadow-slate-200"
+//                 >
+//                   Arrived at Customer
+//                 </button>
+//               )}
+//             </div>
+//           </div>
+//         );
+//       })}
+//     </div>
+//   );
+// };
 // // src/features/operations/pages/PickupQueue.tsx
 // import { useState } from 'react';
 // import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
