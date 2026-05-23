@@ -52,7 +52,7 @@ export const UserManagement = () => {
     }
     
     // Safely calculate the new total based on current DB state
-    const currentBalance = creditUser.wallet_balance || 0;
+    const currentBalance = (creditUser as any).wallet_balance || 0;
     const newTotalBalance = currentBalance + amountToAdd;
     
     updateMutation.mutate({ id: creditUser.id, data: { wallet_balance: newTotalBalance } });
@@ -135,7 +135,6 @@ export const UserManagement = () => {
         </div>
       ) : (
         <>
-          {/* DESKTOP VIEW: Table */}
           <div className="hidden md:block bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
@@ -143,7 +142,6 @@ export const UserManagement = () => {
                   <tr className="bg-slate-50/50 border-b border-slate-100">
                     <th className="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">Profile</th>
                     <th className="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">Contact</th>
-                    {/* NEW WALLET COLUMN HEADER */}
                     <th className="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">Wallet</th>
                     <th className="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">Access Level</th>
                     <th className="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right whitespace-nowrap">Actions</th>
@@ -176,10 +174,10 @@ export const UserManagement = () => {
                           )}
                         </div>
                       </td>
-                      {/* NEW WALLET DATA COLUMN */}
                       <td className="p-6">
                         <div className="flex items-baseline gap-1.5 bg-emerald-50 w-max px-3 py-1.5 rounded-lg border border-emerald-100">
-                          <span className="text-sm font-black text-emerald-600">{user.wallet_balance || 0}</span>
+                          {/* FIXED TYPE ERROR */}
+                          <span className="text-sm font-black text-emerald-600">{(user as any).wallet_balance || 0}</span>
                           <span className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest">pts</span>
                         </div>
                       </td>
@@ -224,7 +222,6 @@ export const UserManagement = () => {
             </div>
           </div>
 
-          {/* MOBILE VIEW: Cards */}
           <div className="grid grid-cols-1 gap-4 md:hidden">
             {filteredUsers.map((user) => (
               <div key={user.id} className="bg-white p-5 rounded-[2rem] border border-slate-100 shadow-sm space-y-4">
@@ -266,13 +263,13 @@ export const UserManagement = () => {
                   )}
                 </div>
 
-                {/* NEW WALLET DATA FOR MOBILE VIEW */}
                 <div className="flex justify-between items-center bg-emerald-50 p-3 rounded-2xl border border-emerald-100">
                   <span className="text-xs font-bold text-emerald-800 flex items-center gap-1.5">
                     <Wallet size={14} /> Wallet Balance
                   </span>
                   <div className="flex items-baseline gap-1">
-                    <span className="text-sm font-black text-emerald-600">{user.wallet_balance || 0}</span>
+                    {/* FIXED TYPE ERROR */}
+                    <span className="text-sm font-black text-emerald-600">{(user as any).wallet_balance || 0}</span>
                     <span className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest">pts</span>
                   </div>
                 </div>
@@ -299,7 +296,6 @@ export const UserManagement = () => {
         </>
       )}
 
-      {/* Credit Deposit Modal (UNCHANGED) */}
       {creditUser && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="bg-white rounded-[2.5rem] w-full max-w-sm p-8 shadow-2xl border border-slate-100 space-y-6">
@@ -314,7 +310,7 @@ export const UserManagement = () => {
                 <p className="text-sm font-bold text-emerald-900">{creditUser.full_name}</p>
               </div>
               <div className="bg-white px-3 py-1.5 rounded-xl border border-emerald-100 shadow-sm text-emerald-600 font-black tracking-tight">
-                {creditUser.wallet_balance || 0} pts
+                {(creditUser as any).wallet_balance || 0} pts
               </div>
             </div>
 
@@ -347,7 +343,6 @@ export const UserManagement = () => {
         </div>
       )}
 
-      {/* Password Reset Modal (UNCHANGED) */}
       {resetUser && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="bg-white rounded-[2.5rem] w-full max-w-sm p-8 shadow-2xl border border-slate-100 space-y-6">
