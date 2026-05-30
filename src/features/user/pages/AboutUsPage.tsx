@@ -35,7 +35,7 @@ export const AboutUsPage = () => {
             <Star size={14} fill="currentColor" /> 20+ Years of Excellence
           </div>
           <h1 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tighter">
-            Al Nejoum Al Arbaah
+            Al Nejoum Al Arbaah Laundry - Branch 01, Ajman UAE
           </h1>
           <p className="text-slate-600 font-medium max-w-xl mx-auto leading-relaxed">
             Established in 2003, we have established ourselves as a prominent
@@ -194,7 +194,7 @@ export const AboutUsPage = () => {
                 Official Contact
               </h2>
               <p className="text-[10px] font-black uppercase tracking-widest text-brand-primary">
-                Al Nejoum Al Arbaah Laundry
+                Al Nejoum Al Arbaah Laundry - Branch 01, Ajman-UAE
               </p>
             </div>
           </div>
