@@ -399,7 +399,7 @@ export const OrderManagement = () => {
                           <div className="w-px h-6 bg-slate-200"></div>
                           <div className="flex flex-col px-2">
                             <label className="text-[8px] font-black uppercase text-slate-400 text-center">Qty</label>
-                            <input 
+                            {/* <input 
                               type="number" 
                               min="0" 
                               value={i.final_quantity > 0 ? i.final_quantity : (i.estimated_quantity || 0)} 
@@ -411,7 +411,24 @@ export const OrderManagement = () => {
                               }}
                               disabled={isItemEditingLocked}
                               className="w-10 bg-transparent text-xs font-black text-slate-900 focus:outline-none text-center disabled:cursor-not-allowed"
-                            />
+                            /> */}
+                            <input 
+  type="number" 
+  min="0" 
+  step="0.01" // <-- NEW: Allows decimals
+  value={i.final_quantity > 0 ? i.final_quantity : (i.estimated_quantity || 0)} 
+  onChange={(e) => {
+    const newItems = [...editingOrder.items];
+    // NEW: Use parseFloat to allow decimals like 13.23
+    const val = e.target.value;
+    const qty = val === '' ? 0 : parseFloat(val); 
+    newItems[index] = { ...newItems[index], final_quantity: qty, estimated_quantity: qty };
+    setEditingOrder({...editingOrder, items: newItems});
+  }}
+  disabled={isItemEditingLocked}
+  // NEW: Increased width (w-14) to fit decimal numbers comfortably
+  className="w-14 bg-transparent text-xs font-black text-slate-900 focus:outline-none text-center disabled:cursor-not-allowed"
+/>
                           </div>
                           <button 
                             onClick={() => {

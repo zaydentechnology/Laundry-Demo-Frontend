@@ -216,7 +216,8 @@ export const PickupQueue = () => {
                                 <span className="text-xs font-black text-slate-700">{itemName}</span>
                                 <span className="text-[9px] font-bold text-brand-primary uppercase">{catName}</span>
                               </div>
-                              <div className="flex items-center gap-3 bg-slate-50 px-2 py-1 rounded-xl border">
+
+                              {/* <div className="flex items-center gap-3 bg-slate-50 px-2 py-1 rounded-xl border">
                                 <button className="p-1 hover:text-brand-primary transition-colors" onClick={() => setQuantities(p => ({...p, [compositeKey]: Math.max(0, p[compositeKey] - 1)}))}>
                                   <Minus size={14}/>
                                 </button>
@@ -224,7 +225,31 @@ export const PickupQueue = () => {
                                 <button className="p-1 hover:text-brand-primary transition-colors" onClick={() => setQuantities(p => ({...p, [compositeKey]: p[compositeKey] + 1}))}>
                                   <Plus size={14}/>
                                 </button>
-                              </div>
+                              </div> */}
+                              <div className="flex items-center gap-2 bg-slate-50 px-2 py-1 rounded-xl border">
+  <button className="p-1 text-slate-400 hover:text-brand-primary transition-colors" onClick={() => setQuantities(p => ({...p, [compositeKey]: Math.max(0, (p[compositeKey] || 0) - 1)}))}>
+    <Minus size={14}/>
+  </button>
+  
+  {/* NEW: Changed from <span> to <input> to allow manual decimal typing */}
+  <input 
+    type="number"
+    min="0"
+    step="0.01"
+    value={qty}
+    onChange={(e) => {
+       const val = e.target.value;
+       const parsedQty = val === '' ? 0 : parseFloat(val);
+       setQuantities(p => ({...p, [compositeKey]: parsedQty}));
+    }}
+    className="w-12 bg-transparent text-center font-black text-xs outline-none text-slate-900"
+  />
+
+  <button className="p-1 text-slate-400 hover:text-brand-primary transition-colors" onClick={() => setQuantities(p => ({...p, [compositeKey]: (p[compositeKey] || 0) + 1}))}>
+    <Plus size={14}/>
+  </button>
+</div>
+
                             </div>
                           );
                         })}

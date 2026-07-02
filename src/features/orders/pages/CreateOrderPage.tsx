@@ -480,7 +480,9 @@ export const CreateOrderPage = () => {
     )}
   </div>
 </div>
-                              <div className="flex items-center gap-3 bg-white p-1 rounded-xl shadow-sm border border-slate-100">
+
+
+                              {/* <div className="flex items-center gap-3 bg-white p-1 rounded-xl shadow-sm border border-slate-100">
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation();
@@ -512,7 +514,42 @@ export const CreateOrderPage = () => {
                                 >
                                   <Plus size={12} />
                                 </button>
-                              </div>
+                              </div> */}
+<div className="flex items-center gap-2 bg-white p-1 rounded-xl shadow-sm border border-slate-100">
+  <button 
+    onClick={(e) => { e.stopPropagation(); updateQuantity( item.id, svc.service_category_id, -1 ); }} 
+    className="h-7 w-7 rounded-lg bg-slate-50 text-slate-400 hover:text-brand-primary flex items-center justify-center active:scale-90 transition-colors" 
+  >
+    <Minus size={12} />
+  </button>
+  
+  <input 
+    type="number"
+    min="0"
+    step="0.01"
+    value={cart[`${item.id}_${svc.service_category_id}`] || 0}
+    onClick={(e) => e.stopPropagation()}
+    onChange={(e) => {
+      e.stopPropagation();
+      const val = e.target.value;
+      const parsedQty = val === '' ? 0 : parseFloat(val);
+      // Directly set the exact decimal value in the cart state
+      setCart((prev) => ({
+        ...prev,
+        [`${item.id}_${svc.service_category_id}`]: Math.max(0, parsedQty),
+      }));
+    }}
+    className="w-12 bg-transparent text-center font-black text-xs outline-none text-slate-900"
+  />
+
+  <button 
+    onClick={(e) => { e.stopPropagation(); updateQuantity( item.id, svc.service_category_id, 1 ); }} 
+    className="h-7 w-7 rounded-lg bg-slate-900 text-white flex items-center justify-center active:scale-90 transition-colors" 
+  >
+    <Plus size={12} />
+  </button>
+</div>
+
                             </div>
                           ))}
                         </div>
