@@ -111,7 +111,7 @@ export const BuildingManagement = () => {
                 <input 
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="e.g. Al Nejoum Tower"
+                  placeholder="e.g. Zayden Tower"
                   className="w-full mt-1 p-4 bg-slate-50 rounded-2xl font-bold text-sm outline-none border border-slate-100 focus:ring-2 focus:ring-brand-primary transition-all"
                 />
               </div>
@@ -280,7 +280,7 @@ export const BuildingManagement = () => {
 //                 <input 
 //                   value={name}
 //                   onChange={(e) => setName(e.target.value)}
-//                   placeholder="e.g. Al Nejoum Tower"
+//                   placeholder="e.g. Zayden Tower"
 //                   className="w-full mt-1 p-4 bg-slate-50 rounded-2xl font-bold text-sm outline-none border border-slate-100 focus:ring-2 focus:ring-brand-primary transition-all"
 //                 />
 //               </div>

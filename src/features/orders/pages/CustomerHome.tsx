@@ -112,7 +112,7 @@ export const CustomerHome = () => {
                     <button
                       type="button"
                       onClick={() => {
-                        const message = `Hey! Make your laundry experience easier with Al Nejoum Al Arbaah Laundry. \n\nSign up at www.alnejoumalarbaahlaundry.com and use my referral code: ${profile.referral_code}`;
+                        const message = `Hey! Make your laundry experience easier with Zayden Laundry. \n\nSign up at www.alnejoumalarbaahlaundry.com and use my referral code: ${profile.referral_code}`;
                         const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
                         window.open(whatsappUrl, '_blank');
                       }}
@@ -277,7 +277,7 @@ export const CustomerHome = () => {
                 <Info size={20} />
               </div>
               <div className="text-left">
-                <p className="font-bold text-slate-900">About Al Nejoum</p>
+                <p className="font-bold text-slate-900">About Zayden</p>
                 <p className="text-[10px] font-bold text-slate-500 uppercase tracking-tight">Our 20-Year Legacy & Facilities</p>
               </div>
             </div>
@@ -449,7 +449,7 @@ export const CustomerHome = () => {
 //                     <button
 //                       type="button"
 //                       onClick={() => {
-//                         const message = `Hey! Make your laundry experience easier with Al Nejoum Al Arbaah Laundry. \n\nSign up at www.alnejoumalarbaahlaundry.com and use my referral code: ${profile.referral_code}`;
+//                         const message = `Hey! Make your laundry experience easier with Zayden Laundry. \n\nSign up at www.alnejoumalarbaahlaundry.com and use my referral code: ${profile.referral_code}`;
 //                         const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
 //                         window.open(whatsappUrl, '_blank');
 //                       }}
@@ -620,7 +620,7 @@ export const CustomerHome = () => {
 //         <Info size={20} />
 //       </div>
 //       <div className="text-left">
-//         <p className="font-bold text-slate-900">About Al Nejoum</p>
+//         <p className="font-bold text-slate-900">About Zayden</p>
 //         <p className="text-[10px] font-bold text-slate-500 uppercase tracking-tight">Our 20-Year Legacy & Facilities</p>
 //       </div>
 //     </div>

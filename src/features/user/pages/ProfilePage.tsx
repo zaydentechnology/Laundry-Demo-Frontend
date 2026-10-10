@@ -380,7 +380,7 @@ export const ProfilePage = () => {
               </div>
               <div>
                 <h2 className="font-black text-lg tracking-tight">
-                  Al Nejoum Al Arbaah Laundry
+                  Zayden Laundry
                 </h2>
                 <p className="text-[10px] font-black uppercase tracking-widest text-brand-primary">
                   Official Support & Contact
@@ -602,7 +602,7 @@ export const ProfilePage = () => {
 //                       <button
 //                         type="button"
 //                       onClick={() => {
-//   const message = `Hey! Make your laundry experience easier with Al Nejoum Al Arbaah Laundry. 
+//   const message = `Hey! Make your laundry experience easier with Zayden Laundry. 
 
 // Sign up at www.alnejoumalarbaahlaundry.com and use my referral code: ${profile.referral_code}`;
   
@@ -856,7 +856,7 @@ export const ProfilePage = () => {
 //               </div>
 //               <div>
 //                 <h2 className="font-black text-lg tracking-tight">
-//                   Al Nejoum Al Arbaah Laundry
+//                   Zayden Laundry
 //                 </h2>
 //                 <p className="text-[10px] font-black uppercase tracking-widest text-brand-primary">
 //                   Official Support & Contact
@@ -1315,7 +1315,7 @@ export const ProfilePage = () => {
 //               </div>
 //               <div>
 //                 <h2 className="font-black text-lg tracking-tight">
-//                   Al Nejoum Al Arbaah Laundry
+//                   Zayden Laundry
 //                 </h2>
 //                 <p className="text-[10px] font-black uppercase tracking-widest text-brand-primary">
 //                   Official Support & Contact
@@ -1716,7 +1716,7 @@ export const ProfilePage = () => {
 //               </div>
 //               <div>
 //                 <h2 className="font-black text-lg tracking-tight">
-//                   Al Nejoum Al Arbaah Laundry
+//                   Zayden Laundry
 //                 </h2>
 //                 <p className="text-[10px] font-black uppercase tracking-widest text-brand-primary">
 //                   Official Support & Contact
@@ -2179,7 +2179,7 @@ export const ProfilePage = () => {
 //                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Building Name</label>
 //                 <input
 //                   {...register('building_name')}
-//                   placeholder="e.g. Al Nejoum Tower"
+//                   placeholder="e.g. Zayden Tower"
 //                   className="w-full px-5 py-4 bg-slate-50 border-none rounded-2xl font-bold text-slate-900 focus:ring-2 focus:ring-brand-primary outline-none transition-all"
 //                 />
 //               </div>
@@ -2431,7 +2431,7 @@ export const ProfilePage = () => {
 //                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Building Name</label>
 //                 <input
 //                   {...register('building_name')}
-//                   placeholder="e.g. Al Nejoum Tower"
+//                   placeholder="e.g. Zayden Tower"
 //                   className="w-full px-5 py-4 bg-slate-50 border-none rounded-2xl font-bold text-slate-900 focus:ring-2 focus:ring-brand-primary outline-none transition-all"
 //                 />
 //               </div>
@@ -2649,7 +2649,7 @@ export const ProfilePage = () => {
 //                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Building Name</label>
 //                 <input
 //                   {...register('building_name')}
-//                   placeholder="e.g. Al Nejoum Tower"
+//                   placeholder="e.g. Zayden Tower"
 //                   className="w-full px-5 py-4 bg-slate-50 border-none rounded-2xl font-bold text-slate-900 focus:ring-2 focus:ring-brand-primary"
 //                 />
 //               </div>

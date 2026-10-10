@@ -26,14 +26,14 @@ export const Navbar = () => {
         <Link to="/" className="flex items-center gap-3">
           <div className="h-10 w-10 shrink-0 overflow-hidden rounded-xl border border-slate-100 shadow-sm bg-white p-0.5">
             {/* Points to public/logo/logo.png */}
-            <img src="/logo/logo.jpg" alt="Al Nejoum Logo" className="h-full w-full object-contain" />
+            <img src="/logo/logo.jpg" alt="Zayden Logo" className="h-full w-full object-contain" />
           </div>
           <div className="hidden sm:flex flex-col justify-center">
             <span className="text-lg font-black tracking-tight text-slate-900 leading-none">
-              Al Nejoum
+              Zayden
             </span>
             <span className="text-brand-primary font-black text-[9px] uppercase tracking-[0.2em] mt-0.5">
-              Al Arbaah Laundry
+              Laundry
             </span>
           </div>
         </Link>

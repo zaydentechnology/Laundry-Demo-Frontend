@@ -176,7 +176,7 @@ export const ProfilePage = () => {
                       <button
                         type="button"
                       onClick={() => {
-  const message = `Hey! Make your laundry experience easier with Al Nejoum Al Arbaah Laundry. 
+  const message = `Hey! Make your laundry experience easier with Zayden Laundry. 
 
 Sign up at www.alnejoumalarbaahlaundry.com and use my referral code: ${profile.referral_code}`;
   
@@ -430,7 +430,7 @@ Sign up at www.alnejoumalarbaahlaundry.com and use my referral code: ${profile.r
               </div>
               <div>
                 <h2 className="font-black text-lg tracking-tight">
-                  Al Nejoum Al Arbaah Laundry
+                  Zayden Laundry
                 </h2>
                 <p className="text-[10px] font-black uppercase tracking-widest text-brand-primary">
                   Official Support & Contact

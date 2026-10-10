@@ -85,7 +85,7 @@ export const RegisterPage = () => {
            <div>
              <h3 className="text-xl font-black tracking-tight mb-1">Account Created!</h3>
              <p className="text-sm font-bold text-emerald-50 opacity-90 leading-relaxed">
-               Welcome to Al Nejoum! Your profile is ready. Please log in with your new PIN.
+               Welcome to Zayden! Your profile is ready. Please log in with your new PIN.
              </p>
            </div>
            <button 

@@ -68,16 +68,16 @@ export const LoginPage = () => {
           
           {/* Logo Image */}
           <div className="inline-flex h-20 w-20 rounded-[1.5rem] bg-white border border-slate-100 items-center justify-center shadow-xl shadow-slate-200/50 mb-4 p-1.5 rotate-3 hover:rotate-0 transition-transform duration-500 overflow-hidden shrink-0">
-             <img src="/logo/logo.jpg" alt="Al Nejoum Logo" className="h-full w-full object-contain" />
+             <img src="/logo/logo.jpg" alt="Zayden Logo" className="h-full w-full object-contain" />
           </div>
 
           {/* OFFICIAL BRAND NAME */}
           <div className="flex flex-col justify-center items-center mb-6">
             <span className="text-2xl font-black tracking-tight text-slate-900 leading-none">
-              Al Nejoum
+              Zayden
             </span>
             <span className="text-brand-primary font-black text-[10px] uppercase tracking-[0.2em] mt-1">
-              Al Arbaah Laundry
+              Laundry
             </span>
           </div>
 
@@ -235,16 +235,16 @@ export const LoginPage = () => {
           
 //           {/* Logo Image */}
 //           <div className="inline-flex h-20 w-20 rounded-[1.5rem] bg-white border border-slate-100 items-center justify-center shadow-xl shadow-slate-200/50 mb-4 p-1.5 rotate-3 hover:rotate-0 transition-transform duration-500 overflow-hidden shrink-0">
-//              <img src="/logo/logo.jpg" alt="Al Nejoum Logo" className="h-full w-full object-contain" />
+//              <img src="/logo/logo.jpg" alt="Zayden Logo" className="h-full w-full object-contain" />
 //           </div>
 
 //           {/* OFFICIAL BRAND NAME */}
 //           <div className="flex flex-col justify-center items-center mb-6">
 //             <span className="text-2xl font-black tracking-tight text-slate-900 leading-none">
-//               Al Nejoum
+//               Zayden
 //             </span>
 //             <span className="text-brand-primary font-black text-[10px] uppercase tracking-[0.2em] mt-1">
-//               Al Arbaah Laundry
+//               Laundry
 //             </span>
 //           </div>
 
@@ -401,16 +401,16 @@ export const LoginPage = () => {
           
 //           {/* Logo Image */}
 //           <div className="inline-flex h-20 w-20 rounded-[1.5rem] bg-white border border-slate-100 items-center justify-center shadow-xl shadow-slate-200/50 mb-4 p-1.5 rotate-3 hover:rotate-0 transition-transform duration-500 overflow-hidden shrink-0">
-//              <img src="/logo/logo.jpg" alt="Al Nejoum Logo" className="h-full w-full object-contain" />
+//              <img src="/logo/logo.jpg" alt="Zayden Logo" className="h-full w-full object-contain" />
 //           </div>
 
 //           {/* OFFICIAL BRAND NAME */}
 //           <div className="flex flex-col justify-center items-center mb-6">
 //             <span className="text-2xl font-black tracking-tight text-slate-900 leading-none">
-//               Al Nejoum
+//               Zayden
 //             </span>
 //             <span className="text-brand-primary font-black text-[10px] uppercase tracking-[0.2em] mt-1">
-//               Al Arbaah Laundry
+//               Laundry
 //             </span>
 //           </div>
 

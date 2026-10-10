@@ -38,13 +38,13 @@ export const AdminSidebar = () => {
           {/* Points to public/logo/logo.png */}
           <img
             src="/logo/logo.jpg"
-            alt="Al Nejoum Logo"
+            alt="Zayden Logo"
             className="h-full w-full object-contain"
           />
         </div>
         <div className="flex flex-col justify-center">
           <span className="text-xl font-black tracking-tight text-slate-900 leading-none">
-            Al Nejoum
+            Zayden
           </span>
           <span className="text-brand-primary font-black text-[9px] uppercase tracking-[0.2em] mt-1">
             Admin Portal
