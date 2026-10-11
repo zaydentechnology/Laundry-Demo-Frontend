@@ -1,13 +1,10 @@
 // src/features/user/pages/AboutUsPage.tsx
+// Demo content only: no original client contact information or client lists.
+
 import {
-  History,
-  Target,
-  Ship,
   MapPin,
   Phone,
-  Mail,
   Info,
-  Award,
   Users,
   ShieldCheck,
   Star,
@@ -15,9 +12,48 @@ import {
   Droplets,
   Wind,
   CheckCircle2,
-  ChevronRight,
+  Clock3,
+  Sparkles,
+  PackageCheck,
 } from "lucide-react";
-import { cn } from "@/utils/cn";
+
+const PHONE_DISPLAY = "+91 8431945251";
+const PHONE_LINK = "tel:+918431945251";
+const DEMO_ADDRESS = ["123 Demo Avenue", "Sample City, CA 90000", "United States (Sample Address)"];
+
+const highlights = [
+  { icon: Sparkles, label: "Care", val: "Fabric-Focused" },
+  { icon: Users, label: "Experience", val: "Customer First" },
+  { icon: Clock3, label: "Workflow", val: "Easy Tracking" },
+  { icon: PackageCheck, label: "Service", val: "End-to-End" },
+];
+
+const processes = [
+  {
+    title: "Wet Washing",
+    icon: Droplets,
+    desc: "Using automated systems and specialized formulas controlled by computers for precision cleaning.",
+  },
+  {
+    title: "Wet Cleaning",
+    icon: Wind,
+    desc: "A chemical-free alternative to dry cleaning using 'chilled' water to provide excellent stain removal.",
+  },
+  {
+    title: "Dry Cleaning",
+    icon: ShieldCheck,
+    desc: "Computerized pre-spotting and processing for delicate garments that require specialized fabric care.",
+  },
+];
+
+const features = [
+  "Convenient order management",
+  "Clear service selection",
+  "Order status tracking",
+  "Organized customer records",
+  "Flexible laundry workflows",
+  "Simple pickup and delivery coordination",
+];
 
 export const AboutUsPage = () => {
   return (
@@ -32,28 +68,26 @@ export const AboutUsPage = () => {
         {/* HERO SECTION */}
         <header className="bg-white/60 backdrop-blur-md p-8 rounded-[2.5rem] border border-white shadow-sm text-center space-y-4">
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-brand-primary/10 text-brand-primary rounded-full text-[10px] font-black uppercase tracking-[0.2em] border border-brand-primary/20">
-            <Star size={14} fill="currentColor" /> 20+ Years of Excellence
+            <Star size={14} fill="currentColor" /> Zayden Laundry Demo
           </div>
           <h1 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tighter">
-            Zayden Laundry - Branch 01, Ajman UAE
+            Welcome to Zayden Laundry
           </h1>
           <p className="text-slate-600 font-medium max-w-xl mx-auto leading-relaxed">
-            Established in 2003, we have established ourselves as a prominent
-            player in the UAE with high-quality service delivery exceeding
-            customer expectations.
+            Explore a modern laundry experience built around convenient services,
+            clear order tracking, and thoughtful garment care. This is a
+            demonstration of the laundry management experience powered by Zayden.
+          </p>
+          <p className="text-xs font-bold uppercase tracking-widest text-slate-500">
+            Demonstration environment · Sample business information
           </p>
         </header>
 
-        {/* STATS GRID */}
+        {/* HIGHLIGHTS */}
         <section className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {[
-            { icon: Ship, label: "Capacity", val: "5000kg/Day" },
-            { icon: Users, label: "Professionals", val: "35+ Staff" },
-            { icon: History, label: "Experience", val: "20+ Years" },
-            { icon: Award, label: "Outlets", val: "4 Retails" },
-          ].map((stat, i) => (
+          {highlights.map((stat) => (
             <div
-              key={i}
+              key={stat.label}
               className="bg-white/80 backdrop-blur-xl p-5 rounded-3xl border border-white shadow-sm text-center space-y-1"
             >
               <div className="h-10 w-10 bg-slate-900 text-white rounded-2xl flex items-center justify-center mx-auto mb-2">
@@ -67,31 +101,15 @@ export const AboutUsPage = () => {
           ))}
         </section>
 
-        {/* OUR PROCESSES SECTION */}
+        {/* KEEP EXISTING SERVICE DESCRIPTIONS */}
         <section className="space-y-4">
           <h3 className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1 bg-white/50 backdrop-blur-md w-max px-3 py-1.5 rounded-lg border border-white">
             How We Work
           </h3>
           <div className="grid md:grid-cols-3 gap-4">
-            {[
-              {
-                title: "Wet Washing",
-                icon: Droplets,
-                desc: "Using automated systems and specialized formulas controlled by computers for precision cleaning.",
-              },
-              {
-                title: "Wet Cleaning",
-                icon: Wind,
-                desc: "A chemical-free alternative to dry cleaning using 'chilled' water to provide excellent stain removal.",
-              },
-              {
-                title: "Dry Cleaning",
-                icon: ShieldCheck,
-                desc: "Computerized pre-spotting and processing for delicate garments that require specialized fabric care.",
-              },
-            ].map((process, i) => (
+            {processes.map((process) => (
               <div
-                key={i}
+                key={process.title}
                 className="bg-white/90 backdrop-blur-xl p-6 rounded-[2rem] border border-white shadow-sm space-y-3"
               >
                 <div className="h-12 w-12 bg-brand-primary/10 text-brand-primary rounded-2xl flex items-center justify-center">
@@ -108,148 +126,81 @@ export const AboutUsPage = () => {
           </div>
         </section>
 
-        {/* MAJOR CLIENTS GRID */}
+        {/* REPLACES REAL CLIENT LIST WITH GENERIC DEMO FEATURES */}
         <section className="bg-white/60 backdrop-blur-md p-8 rounded-[2.5rem] border border-white shadow-sm space-y-6">
           <div className="flex items-center gap-3 border-b border-slate-100 pb-4">
             <div className="p-2 bg-slate-900 text-white rounded-xl">
               <Briefcase size={20} />
             </div>
             <h3 className="text-lg font-black text-slate-900 tracking-tight">
-              Our Major Clients
+              What This Demo Offers
             </h3>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3">
-            {[
-              "Armed Forces Officers Club",
-              "Pan Emirates Home Furnishing",
-              "Multi Tech Engineering",
-              "Al Rostomani Heavy Vehicle",
-              "Galadari Heavy Equipment",
-              "Sharjah International Airport Hotel",
-              "City Taxi",
-              "Mangurad Security",
-              "Malabar Gold",
-              "Brightwell Product LLC",
-              "DAMAC (Green Point)",
-              "Gb Equipments",
-              "Certis Guarding LLC",
-              "Farnek Services LLC",
-              "Al Bawardy Marine Engineering",
-            ].map((client, i) => (
+            {features.map((feature) => (
               <div
-                key={i}
-                className="flex items-center gap-3 text-slate-600 hover:text-brand-primary transition-colors cursor-default"
+                key={feature}
+                className="flex items-center gap-3 text-slate-600"
               >
-                <CheckCircle2
-                  size={14}
-                  className="text-brand-primary shrink-0"
-                />
-                <span className="text-xs font-bold">{client}</span>
+                <CheckCircle2 size={14} className="text-brand-primary shrink-0" />
+                <span className="text-xs font-bold">{feature}</span>
               </div>
             ))}
           </div>
         </section>
 
-        {/* IMAGE SECTION */}
+        {/* No legacy client facility photos: neutral demo presentation instead */}
         <section className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="aspect-video relative overflow-hidden rounded-[2.5rem] bg-slate-100 border border-white shadow-sm flex items-center justify-center">
-            <img
-              src="/images/aboutus2.png"
-              alt="Our Facility"
-              className="absolute inset-0 w-full h-full object-cover transition-opacity duration-500"
-              onError={(e) => {
-                // If the image fails to load, this helps keep the UI clean
-                e.currentTarget.style.display = "none";
-              }}
-            />
-            {/* This text will be hidden behind the image because of 'absolute' and 'object-cover' */}
-            <div className="text-[10px] font-black text-slate-300 uppercase tracking-widest">
-              Facility Image
-            </div>
+          <div className="aspect-video rounded-[2.5rem] bg-white/80 border border-white shadow-sm flex flex-col gap-3 items-center justify-center p-8 text-center">
+            <Droplets size={42} className="text-brand-primary" />
+            <h4 className="font-black text-slate-900">Professional Garment Care</h4>
+            <p className="text-xs text-slate-500">Explore laundry and garment-care services in this sample experience.</p>
           </div>
-
-          <div className="aspect-video relative overflow-hidden rounded-[2.5rem] bg-slate-100 border border-white shadow-sm flex items-center justify-center">
-            <img
-              src="/images/aboutus1.png"
-              alt="Modern Machinery"
-              className="absolute inset-0 w-full h-full object-cover transition-opacity duration-500"
-              onError={(e) => {
-                e.currentTarget.style.display = "none";
-              }}
-            />
-            <div className="text-[10px] font-black text-slate-300 uppercase tracking-widest">
-              Machinery Image
-            </div>
+          <div className="aspect-video rounded-[2.5rem] bg-white/80 border border-white shadow-sm flex flex-col gap-3 items-center justify-center p-8 text-center">
+            <PackageCheck size={42} className="text-brand-primary" />
+            <h4 className="font-black text-slate-900">Simple Order Management</h4>
+            <p className="text-xs text-slate-500">See how the platform organizes customer orders and service workflows.</p>
           </div>
         </section>
 
-        {/* UPDATED CONTACT SECTION */}
+        {/* DEMO CONTACT SECTION */}
         <section className="bg-slate-900 p-8 rounded-[2.5rem] shadow-xl text-white space-y-8">
           <div className="flex items-center gap-3 border-b border-white/10 pb-4">
             <div className="p-2 bg-brand-primary rounded-xl text-white">
               <Info size={20} />
             </div>
             <div>
-              <h2 className="font-black text-lg tracking-tight">
-                Official Contact
-              </h2>
+              <h2 className="font-black text-lg tracking-tight">Contact Zayden</h2>
               <p className="text-[10px] font-black uppercase tracking-widest text-brand-primary">
-                Zayden Laundry - Branch 01, Ajman-UAE
+                Laundry Management Demo
               </p>
             </div>
           </div>
-
           <div className="grid md:grid-cols-2 gap-8 text-sm font-medium">
-            <div className="space-y-6">
-              <div className="flex items-start gap-4">
-                <MapPin
-                  className="shrink-0 mt-1 text-brand-primary"
-                  size={20}
-                />
+            <div className="flex items-start gap-4">
+              <MapPin className="shrink-0 mt-1 text-brand-primary" size={20} />
+              <div className="space-y-1">
+                <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Sample US Address</p>
                 <p className="leading-relaxed text-slate-300">
-                  Industrial Area-13, Behind National Paint
-                  <br />
-                  Near to Dubai Dates Factory
-                  <br />
-                  Post Box No. 26697, Sharjah
+                  {DEMO_ADDRESS.map((line, i) => (
+                    <span key={line}>{line}{i !== DEMO_ADDRESS.length - 1 && <br />}</span>
+                  ))}
                 </p>
               </div>
-              <div className="flex items-center gap-4">
-                <Mail className="shrink-0 text-brand-primary" size={20} />
-                <a
-                  href="mailto:alnejoumlaundry@yahoo.com"
-                  className="text-slate-300 hover:text-white transition-colors underline underline-offset-4"
-                >
-                  alnejoumlaundry@yahoo.com
+            </div>
+            <div className="flex items-start gap-4">
+              <Phone className="shrink-0 mt-1 text-brand-primary" size={20} />
+              <div className="space-y-1">
+                <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Phone / WhatsApp</p>
+                <a href={PHONE_LINK} className="text-slate-200 hover:text-white underline underline-offset-4">
+                  {PHONE_DISPLAY}
                 </a>
               </div>
             </div>
-
-            <div className="space-y-6">
-              <div className="flex items-start gap-4">
-                <Phone className="shrink-0 mt-1 text-brand-primary" size={20} />
-                <div className="space-y-4">
-                  <div className="space-y-1">
-                    <p className="text-[10px] font-black uppercase text-slate-500 tracking-widest">
-                      Office Tel & Fax
-                    </p>
-                    <p className="text-slate-200">06-5530600</p>
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-[10px] font-black uppercase text-slate-500 tracking-widest">
-                      Mobile / WhatsApp
-                    </p>
-                    <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-slate-200">
-                      <p>0501535565</p>
-                      <p>0501552254</p>
-                      <p>0501554105</p>
-                      
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
           </div>
+          <p className="text-[10px] text-slate-400">
+            This is a product demonstration. The US address is fictional and is not an operating branch.
+          </p>
         </section>
       </div>
     </div>

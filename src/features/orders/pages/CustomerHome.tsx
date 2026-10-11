@@ -285,7 +285,7 @@ export const CustomerHome = () => {
           </button>
 
           {/* NEW: Other Brands / Curtains */}
-          <a
+          {/* <a
             href="http://www.sunshadecurtain.com/"
             target="_blank"
             rel="noopener noreferrer"
@@ -301,7 +301,7 @@ export const CustomerHome = () => {
               </div>
             </div>
             <ChevronRight className="text-slate-300 group-hover:text-indigo-500 transition-colors" size={20} />
-          </a>
+          </a> */}
 
           {/* NEW: Support Contact */}
           <a
@@ -314,7 +314,7 @@ export const CustomerHome = () => {
               </div>
               <div className="text-left">
                 <p className="font-bold text-slate-900">Support Required?</p>
-                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-tight">Call us at 0501535565</p>
+                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-tight">Call us at 8431945251</p>
               </div>
             </div>
             <ChevronRight className="text-slate-300 group-hover:text-emerald-500 transition-colors" size={20} />
